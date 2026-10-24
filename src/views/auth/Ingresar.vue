@@ -7,6 +7,9 @@ import { supabase } from '@/lib/supabase'
 import { traducirError } from '@/lib/errores'
 import { useOrganizacion } from '@/stores/organizacion'
 
+// El registro público está cerrado en producción: las cuentas las crea la administración.
+const REGISTRO_PUBLICO = import.meta.env.VITE_REGISTRO_PUBLICO === 'true'
+
 const route = useRoute()
 const router = useRouter()
 const email = ref('')
@@ -46,8 +49,11 @@ async function ingresar() {
       </div>
     </form>
     <template #pie>
-      ¿No tenés cuenta?
-      <RouterLink :to="{ path: '/registro', query: route.query }" class="enlace">Creá una gratis</RouterLink>
+      <template v-if="REGISTRO_PUBLICO">
+        ¿No tenés cuenta?
+        <RouterLink :to="{ path: '/registro', query: route.query }" class="enlace">Creá una</RouterLink>
+      </template>
+      <template v-else>¿Todavía no tenés cuenta? Pedísela a quien administra tu salón o a Festy.</template>
     </template>
   </LayoutAuth>
 </template>

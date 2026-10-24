@@ -11,7 +11,8 @@ El front usa `supabase-js` **solo para la autenticación**; todos los datos pasa
 
 ## Qué incluye
 - **Multiempresa**: cada organización es un tenant aislado por RLS; un usuario puede pertenecer a varias. Salones → sedes → espacios → recursos.
-- **Usuarios**: registro, ingreso, recuperación de contraseña, invitaciones por enlace, 7 roles con permisos configurables, auditoría de cambios.
+- **Cuentas**: el registro público está cerrado; las empresas las da de alta la administración de Festy en `/plataforma` (solo los emails de `ADMIN_PLATAFORMA` en el servidor) con una contraseña inicial para el dueño. En desarrollo local, `VITE_REGISTRO_PUBLICO=true` muestra «Crear cuenta» (lo usan las pruebas).
+- **Usuarios**: ingreso, cambio y recuperación de contraseña, invitaciones por enlace (el invitado crea su cuenta desde el enlace), 7 roles con permisos configurables, auditoría de cambios.
 - **Panel**: eventos de hoy, próximas reservas, consultas, tentativas, contratos pendientes, cobros próximos, deuda vencida, ingresos, gastos, ocupación, fines de semana libres y tareas. Filtros por período, salón, sede y responsable.
 - **Calendario**: mes, semana y día (columnas por espacio); estados, bloqueos, feriados, horarios, montaje/limpieza, eventos multi-día. La base impide superposiciones, también en concurrencia.
 - **Reservas, clientes, cobros (plan de cuotas, señas, anulaciones), gastos y tareas.**

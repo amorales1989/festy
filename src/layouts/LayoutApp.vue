@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { quitarPush, registrarPush } from '@/lib/app'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ChartColumnBig, CalendarDays, ChevronsUpDown, FileText, House, ListChecks, LogOut, Menu, PartyPopper, Plus,
+  Building2, ChartColumnBig, KeyRound, CalendarDays, ChevronsUpDown, FileText, House, ListChecks, LogOut, Menu, PartyPopper, Plus,
   Settings, Users, Wallet, X,
 } from 'lucide-vue-next'
 import BusquedaGlobal from '@/components/BusquedaGlobal.vue'
@@ -33,9 +33,10 @@ const navegacion = computed(() => [
   { a: '/estadisticas', etiqueta: 'Estadísticas', icono: ChartColumnBig, visible: org.puede('reservas.ver') },
   { a: '/tareas', etiqueta: 'Tareas', icono: ListChecks, visible: org.puede('tareas.ver') },
   { a: '/configuracion', etiqueta: 'Ajustes', icono: Settings, visible: true },
+  { a: '/plataforma', etiqueta: 'Administración', icono: Building2, visible: sesion.esAdminPlataforma },
 ].filter((n) => n.visible))
 
-const navegacionInferior = computed(() => navegacion.value.filter((n) => n.a !== '/configuracion' && n.a !== '/tareas' && n.a !== '/estadisticas').slice(0, 4))
+const navegacionInferior = computed(() => navegacion.value.filter((n) => !['/configuracion', '/tareas', '/estadisticas', '/plataforma'].includes(n.a)).slice(0, 4))
 
 function activo(a: string) {
   if (a === '/presupuestos') return route.path.startsWith('/presupuestos') || route.path.startsWith('/catalogo')
@@ -113,6 +114,7 @@ async function salir() {
             <p class="truncate text-sm font-medium">{{ sesion.perfil?.nombre || sesion.usuario?.email }}</p>
             <p class="truncate text-xs text-slate-500">{{ sesion.usuario?.email }}</p>
           </div>
+          <RouterLink to="/nueva-clave" class="btn-fantasma p-2" aria-label="Cambiar contraseña" title="Cambiar contraseña"><KeyRound class="size-4" /></RouterLink>
           <button class="btn-fantasma p-2" aria-label="Cerrar sesión" title="Cerrar sesión" @click="salir"><LogOut class="size-4" /></button>
         </div>
       </div>

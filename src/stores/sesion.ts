@@ -7,6 +7,8 @@ import { api } from '@/lib/api'
 export const useSesion = defineStore('sesion', () => {
   const sesion = ref<Session | null>(null)
   const perfil = ref<Fila<'perfiles'> | null>(null)
+  /** Administra la plataforma (da de alta empresas). Lo decide el servidor. */
+  const esAdminPlataforma = ref(false)
   const listo = ref(false)
   let iniciando: Promise<void> | null = null
 
@@ -16,10 +18,13 @@ export const useSesion = defineStore('sesion', () => {
   async function cargarPerfil() {
     if (!usuario.value) {
       perfil.value = null
+      esAdminPlataforma.value = false
       return
     }
+    const admin = api.get<{ admin: boolean }>('/plataforma/yo').then((r) => { esAdminPlataforma.value = r.admin }).catch(() => {})
     // Sin conexión no se rompe el arranque: el perfil se reintenta en el próximo evento de sesión.
     perfil.value = await api.get<Fila<'perfiles'> | null>('/perfil').catch(() => perfil.value)
+    await admin
   }
 
   function iniciar() {
@@ -41,7 +46,7 @@ export const useSesion = defineStore('sesion', () => {
       supabase.auth.onAuthStateChange((evento, nueva) => {
         sesion.value = nueva
         if (evento === 'SIGNED_IN' || evento === 'USER_UPDATED') void cargarPerfil()
-        if (evento === 'SIGNED_OUT') perfil.value = null
+        if (evento === 'SIGNED_OUT') { perfil.value = null; esAdminPlataforma.value = false }
       })
       listo.value = true
     })()
@@ -52,7 +57,8 @@ export const useSesion = defineStore('sesion', () => {
     await supabase.auth.signOut()
     sesion.value = null
     perfil.value = null
+    esAdminPlataforma.value = false
   }
 
-  return { sesion, perfil, listo, usuario, autenticado, iniciar, cargarPerfil, salir }
+  return { sesion, perfil, esAdminPlataforma, listo, usuario, autenticado, iniciar, cargarPerfil, salir }
 })

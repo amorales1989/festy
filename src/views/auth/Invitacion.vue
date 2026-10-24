@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LayoutAuth from '@/layouts/LayoutAuth.vue'
-import { api } from '@/lib/api'
+import Campo from '@/components/ui/Campo.vue'
+import { api, ErrorApi } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
 import { traducirError } from '@/lib/errores'
 import { useSesion } from '@/stores/sesion'
 import { useOrganizacion } from '@/stores/organizacion'
@@ -25,6 +27,29 @@ onMounted(async () => {
     error.value = traducirError(e)
   }
 })
+
+// Sin registro público: el invitado crea su cuenta acá, con el email de la invitación.
+const nueva = reactive({ nombre: '', clave: '', repetir: '' })
+const yaTieneCuenta = ref(false)
+const claveValida = computed(() => nueva.clave.length >= 8 && nueva.clave === nueva.repetir)
+async function crearCuenta() {
+  error.value = ''
+  if (nueva.nombre.trim().length < 2) { error.value = 'Ingresá tu nombre.'; return }
+  if (!claveValida.value) { error.value = 'La contraseña debe tener al menos 8 caracteres y coincidir en los dos campos.'; return }
+  ocupado.value = true
+  try {
+    await api.post(`/invitaciones/${encodeURIComponent(token)}/cuenta`, { nombre: nueva.nombre.trim(), clave: nueva.clave })
+    const { error: e } = await supabase.auth.signInWithPassword({ email: datos.value!.email!, password: nueva.clave })
+    if (e) throw e
+    await sesion.cargarPerfil()
+    ocupado.value = false
+    await aceptar()
+  } catch (e) {
+    if (e instanceof ErrorApi && e.status === 409) yaTieneCuenta.value = true
+    error.value = traducirError(e)
+    ocupado.value = false
+  }
+}
 
 async function aceptar() {
   ocupado.value = true
@@ -59,11 +84,18 @@ async function aceptar() {
         </p>
         <button class="btn-primario w-full" :disabled="ocupado" @click="aceptar">Aceptar invitación</button>
       </template>
-      <div v-else class="grid gap-2 sm:grid-cols-2">
-        <RouterLink :to="{ path: '/registro', query: { volver: route.fullPath } }" class="btn-primario">Crear cuenta</RouterLink>
-        <RouterLink :to="{ path: '/ingresar', query: { volver: route.fullPath } }" class="btn-secundario">Ya tengo cuenta</RouterLink>
-      </div>
-      <p class="text-xs text-slate-500">Usá el email {{ datos.email }}.</p>
+      <template v-else>
+        <form v-if="!yaTieneCuenta" class="space-y-3" @submit.prevent="crearCuenta">
+          <p>Creá tu cuenta para entrar. Tu usuario va a ser <strong>{{ datos.email }}</strong>.</p>
+          <Campo etiqueta="Tu nombre" para="inv-nombre"><input id="inv-nombre" v-model="nueva.nombre" class="entrada" autocomplete="name" /></Campo>
+          <Campo etiqueta="Contraseña" para="inv-clave" ayuda="Mínimo 8 caracteres."><input id="inv-clave" v-model="nueva.clave" type="password" class="entrada" autocomplete="new-password" /></Campo>
+          <Campo etiqueta="Repetí la contraseña" para="inv-repetir" :error="nueva.repetir && nueva.repetir !== nueva.clave ? 'Las contraseñas no coinciden.' : ''">
+            <input id="inv-repetir" v-model="nueva.repetir" type="password" class="entrada" autocomplete="new-password" /></Campo>
+          <button class="btn-primario w-full" :disabled="ocupado">{{ ocupado ? 'Creando tu cuenta…' : 'Crear cuenta y unirme' }}</button>
+        </form>
+        <RouterLink :to="{ path: '/ingresar', query: { volver: route.fullPath } }" :class="yaTieneCuenta ? 'btn-primario w-full' : 'enlace block text-center'">
+          {{ yaTieneCuenta ? 'Ingresar para aceptar' : 'Ya tengo cuenta: ingresar' }}</RouterLink>
+      </template>
     </div>
     <p v-if="error" class="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ error }}</p>
   </LayoutAuth>

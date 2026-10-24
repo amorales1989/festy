@@ -14,13 +14,18 @@ declare module 'vue-router' {
   }
 }
 
+const REGISTRO_PUBLICO = import.meta.env.VITE_REGISTRO_PUBLICO === 'true'
+
 const rutas: RouteRecordRaw[] = [
   { path: '/ingresar', component: () => import('@/views/auth/Ingresar.vue'), meta: { publica: true, titulo: 'Ingresar' } },
-  { path: '/registro', component: () => import('@/views/auth/Registro.vue'), meta: { publica: true, titulo: 'Crear cuenta' } },
+  // El registro público está cerrado en producción: las cuentas las crea la administración de Festy.
+  { path: '/registro', component: () => import('@/views/auth/Registro.vue'), meta: { publica: true, titulo: 'Crear cuenta' },
+    beforeEnter: () => (REGISTRO_PUBLICO ? true : { path: '/ingresar' }) },
   { path: '/recuperar', component: () => import('@/views/auth/RecuperarClave.vue'), meta: { publica: true, titulo: 'Recuperar contraseña' } },
   { path: '/nueva-clave', component: () => import('@/views/auth/NuevaClave.vue'), meta: { libre: true, titulo: 'Nueva contraseña' } },
   { path: '/s/:slug', name: 'pagina-salon', component: () => import('@/views/publico/PaginaSalon.vue'), meta: { libre: true, titulo: 'Pedí tu fecha' } },
   { path: '/invitacion/:token', component: () => import('@/views/auth/Invitacion.vue'), meta: { libre: true, titulo: 'Invitación' } },
+  { path: '/plataforma', name: 'plataforma', component: () => import('@/views/plataforma/Plataforma.vue'), meta: { sinOrganizacion: true, titulo: 'Administración de Festy' } },
   { path: '/bienvenida', component: () => import('@/views/onboarding/Bienvenida.vue'), meta: { sinOrganizacion: true, titulo: 'Bienvenida' } },
   {
     path: '/',
@@ -86,8 +91,9 @@ router.beforeEach(async (to) => {
       useNotificaciones().error(e)
     }
   }
+  if (to.name === 'plataforma' && !sesion.esAdminPlataforma) return { path: '/' }
   if (to.meta.sinOrganizacion) return true
-  if (!org.actual) return { path: '/bienvenida' }
+  if (!org.actual) return sesion.esAdminPlataforma ? { name: 'plataforma' } : { path: '/bienvenida' }
 
   if (to.meta.permiso && !org.puede(to.meta.permiso)) {
     useNotificaciones().info('No tenés permiso para ver esa sección.')
