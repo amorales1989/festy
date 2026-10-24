@@ -514,7 +514,7 @@ function describirCambio(cambios: unknown): string {
         <section class="tarjeta space-y-4 p-4 lg:col-span-1">
           <h2 class="text-sm font-semibold">Datos del evento</h2>
           <dl class="space-y-3 text-sm">
-            <div v-if="org.sucursales.length > 1"><dt class="text-xs text-slate-500">Sede</dt><dd>{{ reserva.sucursales?.nombre }}</dd></div>
+            <div v-if="org.sucursales.length > 1"><dt class="text-xs text-slate-500">Salón</dt><dd>{{ reserva.sucursales?.nombre }}</dd></div>
             <div><dt class="text-xs text-slate-500">Espacios</dt>
               <dd v-for="e in reserva.reserva_espacios" :key="e.espacios?.id" class="flex items-center gap-2">
                 <span class="size-2 rounded-full" :style="{ background: e.espacios?.color }" /> {{ e.espacios?.nombre }}

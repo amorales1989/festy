@@ -245,7 +245,7 @@ function validar(): boolean {
   if (nuevoCliente.activo && nuevoCliente.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(nuevoCliente.email)) errores.cliente = 'El email del cliente no es válido.'
   if (!f.titulo.trim()) f.titulo = `${TIPOS_EVENTO[f.tipo_evento]}${f.cliente_nombre || nuevoCliente.nombre ? ' · ' + (f.cliente_nombre || nuevoCliente.nombre.trim()) : ''}`
   if (f.titulo.trim().length < 2) errores.titulo = 'Ingresá un nombre para identificar el evento.'
-  if (!f.sucursal_id) errores.sucursal = 'Elegí la sede.'
+  if (!f.sucursal_id) errores.sucursal = 'Elegí el salón.'
   if (!f.espacios.length && f.estado !== 'consulta' && f.estado !== 'cancelada') errores.espacios = 'Elegí al menos un espacio.'
   if (!f.fecha || fechaInvalida.value) errores.fecha = 'Ingresá una fecha válida.'
   if (f.varios_dias && (!f.fecha_fin || f.fecha_fin < f.fecha)) errores.fecha_fin = 'La fecha de fin debe ser igual o posterior al inicio.'
@@ -361,7 +361,7 @@ const sinSedes = computed(() => !org.tieneSedes)
           {{ [pasaMedianoche ? 'Termina al día siguiente' : '', duracionTexto ? `dura ${duracionTexto}` : ''].filter(Boolean).join(' · ') }}
         </p>
 
-        <select v-if="sucursales.length > 1" id="suc" v-model="f.sucursal_id" class="entrada" aria-label="Sede">
+        <select v-if="sucursales.length > 1" id="suc" v-model="f.sucursal_id" class="entrada" aria-label="Salón">
           <option v-for="s in sucursales" :key="s.id" :value="s.id">{{ s.nombre }}</option>
         </select>
         <div class="flex flex-wrap gap-2" role="group" aria-label="Espacios">

@@ -55,7 +55,7 @@ const rutas: RouteRecordRaw[] = [
         children: [
           { path: '', redirect: { name: 'config-organizacion' } },
           { path: 'organizacion', name: 'config-organizacion', component: () => import('@/views/configuracion/Organizacion.vue'), meta: { titulo: 'Organización' } },
-          { path: 'sedes', name: 'config-sedes', component: () => import('@/views/configuracion/Sedes.vue'), meta: { titulo: 'Sedes y espacios' } },
+          { path: 'sedes', name: 'config-sedes', component: () => import('@/views/configuracion/Sedes.vue'), meta: { titulo: 'Salones y espacios' } },
           { path: 'pagina', name: 'config-pagina', component: () => import('@/views/configuracion/PaginaPublica.vue'), meta: { titulo: 'Página web' } },
           { path: 'feriados', name: 'config-feriados', component: () => import('@/views/configuracion/Feriados.vue'), meta: { titulo: 'Feriados' } },
           { path: 'usuarios', name: 'config-usuarios', component: () => import('@/views/configuracion/Usuarios.vue'), meta: { permiso: 'usuarios.gestionar', titulo: 'Usuarios' } },

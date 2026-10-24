@@ -29,7 +29,7 @@ watch(() => acciones.version, cargar)
 
 const pasos = computed(() => estado.value ? [
   { hecho: estado.value.datos_organizacion, texto: 'Completá los datos de tu organización', a: '/configuracion/organizacion', visible: org.puede('organizacion.editar') },
-  { hecho: estado.value.sucursal && estado.value.espacio, texto: 'Cargá tu sede y tus espacios', a: '/configuracion/sedes', visible: org.puede('sedes.gestionar') },
+  { hecho: estado.value.sucursal && estado.value.espacio, texto: 'Cargá tu salón', a: '/configuracion/sedes', visible: org.puede('sedes.gestionar') },
   { hecho: estado.value.horarios, texto: 'Definí horarios de atención', a: '/configuracion/sedes', visible: org.puede('sedes.gestionar') },
   { hecho: estado.value.equipo, texto: 'Invitá a tu equipo', a: '/configuracion/usuarios', visible: org.puede('usuarios.gestionar') },
   { hecho: estado.value.cliente, texto: 'Cargá o importá tus clientes', a: '/clientes', visible: org.puede('clientes.gestionar') },

@@ -145,7 +145,7 @@ function hacerPresupuesto() {
           <button v-for="(m, k) in MODALIDADES_ENTREVISTA" :key="k" type="button" role="radio" :aria-checked="f.modalidad === k"
                   :class="['rounded-lg px-3 py-1.5 text-sm ring-1', f.modalidad === k ? 'bg-marca-50 font-medium ring-2 ring-marca-500' : 'ring-slate-300']" @click="f.modalidad = k">{{ m }}</button>
         </div>
-        <Campo v-if="f.modalidad === 'presencial' && org.sucursalesActivas.length > 1" etiqueta="Sede" para="ent-suc">
+        <Campo v-if="f.modalidad === 'presencial' && org.sucursalesActivas.length > 1" etiqueta="Salón" para="ent-suc">
           <select id="ent-suc" v-model="f.sucursal_id" class="entrada"><option v-for="s in org.sucursalesActivas" :key="s.id" :value="s.id">{{ s.nombre }}</option></select>
         </Campo>
         <Campo v-if="f.modalidad === 'videollamada'" etiqueta="Enlace de la videollamada" para="ent-enlace"><input id="ent-enlace" v-model="f.enlace" class="entrada" placeholder="https://meet.google.com/…" /></Campo>

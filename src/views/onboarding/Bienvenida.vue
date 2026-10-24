@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Incorporación guiada: 1) organización, 2) primera sede y espacio, 3) datos de ejemplo.
+// Incorporación guiada: 1) organización, 2) su salón (lugar + espacio principal), 3) datos de ejemplo.
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Building2, Check, MapPin, Sparkles } from 'lucide-vue-next'
@@ -22,7 +22,7 @@ const orgId = ref<string | null>(null)
 
 const datosOrg = reactive({ nombre: '', zona: 'America/Argentina/Buenos_Aires' })
 const sede = reactive({
-  sucursal: 'Sede principal', direccion: '', localidad: '', provincia: '',
+  direccion: '', localidad: '', provincia: '',
   espacio: '', tipo: 'salon', capacidad: 150 as number | null,
   horarios: true, desde: '10:00', hasta: '05:00',
 })
@@ -61,14 +61,11 @@ async function crearSede() {
   }
   ocupado.value = true
   try {
-    const salon = await api.post<{ id: string }>(rutaOrg(orgId.value!, 'salones'), { nombre: datosOrg.nombre.trim() })
-    const sucursal = await api.post<{ id: string }>(rutaOrg(orgId.value!, 'sucursales'), {
-      salon_id: salon.id, nombre: sede.sucursal.trim() || 'Sede principal',
+    // El salón (lugar) se llama como la empresa y nace con su espacio principal.
+    await api.post(rutaOrg(orgId.value!, 'salones/nuevo'), {
+      nombre: datosOrg.nombre.trim(), espacio: sede.espacio.trim(), tipo: sede.tipo, capacidad_maxima: sede.capacidad,
       direccion: sede.direccion || null, localidad: sede.localidad || null, provincia: sede.provincia || null,
-    })
-    await api.post(rutaOrg(orgId.value!, 'espacios'), {
-      datos: { sucursal_id: sucursal.id, nombre: sede.espacio.trim(), tipo: sede.tipo, capacidad_maxima: sede.capacidad },
-      horarios: sede.horarios ? [0, 1, 2, 3, 4, 5, 6].map((d) => ({ dia_semana: d, hora_desde: sede.desde, hora_hasta: sede.hasta })) : null,
+      horarios: sede.horarios ? [0, 1, 2, 3, 4, 5, 6].map((d) => ({ dia_semana: d, hora_desde: sede.desde, hora_hasta: sede.hasta })) : undefined,
     })
     paso.value = 3
   } catch (e) {

@@ -7,7 +7,7 @@ const org = useOrganizacion()
 const route = useRoute()
 const secciones = computed(() => [
   { nombre: 'config-organizacion', etiqueta: 'Organización', visible: true },
-  { nombre: 'config-sedes', etiqueta: 'Sedes y espacios', visible: true },
+  { nombre: 'config-sedes', etiqueta: 'Salones y espacios', visible: true },
   { nombre: 'config-pagina', etiqueta: 'Página web', visible: true },
   { nombre: 'config-feriados', etiqueta: 'Feriados', visible: true },
   { nombre: 'config-usuarios', etiqueta: 'Usuarios', visible: org.puede('usuarios.gestionar') },

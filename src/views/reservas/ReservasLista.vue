@@ -155,8 +155,8 @@ const paginas = computed(() => Math.ceil(total.value / POR_PAGINA))
         <option value="pendiente">Sin firmar (vigentes)</option>
         <option value="firmado">Firmado</option>
       </select>
-      <select v-if="org.sucursales.length > 1" v-model="filtros.sucursal" class="entrada w-auto" aria-label="Sede">
-        <option value="">Todas las sedes</option>
+      <select v-if="org.sucursales.length > 1" v-model="filtros.sucursal" class="entrada w-auto" aria-label="Salón">
+        <option value="">Todos los salones</option>
         <option v-for="s in org.sucursales" :key="s.id" :value="s.id">{{ s.nombre }}</option>
       </select>
       <div class="w-36"><CampoFecha v-model="filtros.desde" aria-label="Desde" /></div>

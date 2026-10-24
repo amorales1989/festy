@@ -209,8 +209,8 @@ const nombreEspacio = (id: string) => org.espacios.find((e) => e.id === id)?.nom
 
     <!-- Filtros -->
     <div class="flex flex-wrap items-center gap-2">
-      <select v-if="org.sucursalesActivas.length > 1" v-model="estado.sucursal" class="entrada w-auto py-1.5" aria-label="Sede">
-        <option value="">Todas las sedes</option>
+      <select v-if="org.sucursalesActivas.length > 1" v-model="estado.sucursal" class="entrada w-auto py-1.5" aria-label="Salón">
+        <option value="">Todos los salones</option>
         <option v-for="s in org.sucursalesActivas" :key="s.id" :value="s.id">{{ s.nombre }}</option>
       </select>
       <select v-if="org.espaciosActivos.length > 1" v-model="estado.espacio" class="entrada w-auto py-1.5" aria-label="Espacio">

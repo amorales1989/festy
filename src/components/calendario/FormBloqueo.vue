@@ -61,7 +61,7 @@ async function guardar() {
 <template>
   <Modal v-model="abierto" titulo="Cerrar fechas" descripcion="Mientras estén cerrados, esos espacios no se pueden reservar (por ejemplo, por mantenimiento o vacaciones).">
     <form id="form-bloqueo" class="space-y-4" @submit.prevent="guardar">
-      <Campo v-if="org.sucursalesActivas.length > 1" etiqueta="Sede" para="b-suc">
+      <Campo v-if="org.sucursalesActivas.length > 1" etiqueta="Salón" para="b-suc">
         <select id="b-suc" v-model="f.sucursal" class="entrada">
           <option v-for="s in org.sucursalesActivas" :key="s.id" :value="s.id">{{ s.nombre }}</option>
         </select>

@@ -234,12 +234,12 @@ const diaCorto = (iso: string) => format(fechaDeISO(iso), 'EEE d/MM', { locale: 
         <label class="w-40 text-xs font-medium text-slate-600">Desde <CampoFecha v-model="filtros.desde" class="mt-1" /></label>
         <label class="w-40 text-xs font-medium text-slate-600">Hasta <CampoFecha v-model="filtros.hasta" class="mt-1" /></label>
       </template>
-      <label v-if="org.salones.length > 1" class="text-xs font-medium text-slate-600">Salón
+      <label v-if="org.salones.length > 1" class="text-xs font-medium text-slate-600">Marca
         <select v-model="filtros.salon" class="entrada mt-1 w-44"><option value="">Todos</option>
           <option v-for="s in org.salones" :key="s.id" :value="s.id">{{ s.nombre }}</option></select>
       </label>
-      <label v-if="org.sucursales.length > 1" class="text-xs font-medium text-slate-600">Sede
-        <select v-model="filtros.sucursal" class="entrada mt-1 w-44"><option value="">Todas</option>
+      <label v-if="org.sucursales.length > 1" class="text-xs font-medium text-slate-600">Salón
+        <select v-model="filtros.sucursal" class="entrada mt-1 w-44"><option value="">Todos</option>
           <option v-for="s in sucursalesFiltradas" :key="s.id" :value="s.id">{{ s.nombre }}</option></select>
       </label>
       <label class="text-xs font-medium text-slate-600">Responsable

@@ -10,7 +10,7 @@ import { useOrganizacion } from '@/stores/organizacion'
 const TABLAS: Record<string, string> = {
   reservas: 'Reservas', reserva_espacios: 'Espacios de reserva', pagos: 'Cobros', cuotas: 'Cuotas', clientes: 'Clientes',
   bloqueos: 'Bloqueos', gastos: 'Gastos', tareas: 'Tareas', membresias: 'Usuarios', invitaciones: 'Invitaciones',
-  roles: 'Roles', rol_permisos: 'Permisos', organizaciones: 'Organización', salones: 'Salones', sucursales: 'Sedes',
+  roles: 'Roles', rol_permisos: 'Permisos', organizaciones: 'Organización', salones: 'Marcas', sucursales: 'Salones',
   espacios: 'Espacios', espacio_horarios: 'Horarios', recursos: 'Recursos', feriados: 'Feriados',
 }
 const ACCIONES: Record<string, string> = { alta: 'Alta', cambio: 'Cambio', baja: 'Baja' }

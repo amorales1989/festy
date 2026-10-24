@@ -228,7 +228,7 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
                 <a v-if="e.pagina" :href="`/s/${e.pagina}`" target="_blank" rel="noopener" class="text-xs text-marca-700 hover:underline">/s/{{ e.pagina }}</a>
                 <span v-if="e.estado !== 'activa'" class="ml-1 text-xs text-rose-700">{{ ESTADOS[e.estado] ?? e.estado }}</span></td>
               <td class="whitespace-nowrap text-right"><span class="tabular-nums">{{ fmtMoneda(e.precio, true) }}</span>
-                <span class="block text-xs text-slate-500">{{ e.precio_especial !== null ? 'precio especial' : `tarifa · ${Math.max(e.sedes, 1)} ${e.sedes > 1 ? 'sedes' : 'sede'}` }}</span></td>
+                <span class="block text-xs text-slate-500">{{ e.precio_especial !== null ? 'precio especial' : `tarifa · ${Math.max(e.sedes, 1)} ${e.sedes > 1 ? 'salones' : 'salón'}` }}</span></td>
               <td class="whitespace-nowrap"><template v-if="e.ultimo_pago">{{ fmtFecha(e.ultimo_pago.fecha, ZONA_POR_DEFECTO) }}
                 <span class="block text-xs text-slate-500">{{ fmtMoneda(e.ultimo_pago.monto, true) }} · {{ MEDIOS_PAGO[e.ultimo_pago.medio] ?? e.ultimo_pago.medio }}{{ e.ultimo_pago.meses > 1 ? ` · ${e.ultimo_pago.meses} meses` : '' }}</span></template>
                 <span v-else class="text-slate-400">—</span></td>
@@ -263,7 +263,7 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
       <div v-else class="space-y-3 text-sm">
         <p class="text-slate-700">Listo. Enviale estos datos al dueño (por WhatsApp o email):</p>
         <pre class="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 font-sans text-slate-800">{{ textoAcceso }}</pre>
-        <p class="text-xs text-slate-500">La contraseña no se vuelve a mostrar. Al entrar, el dueño carga sus sedes y espacios guiado por el inicio.</p>
+        <p class="text-xs text-slate-500">La contraseña no se vuelve a mostrar. Al entrar, el dueño carga su salón (nombre, dirección y capacidad) y ya puede reservar.</p>
       </div>
       <template #pie>
         <template v-if="!resultado">
@@ -302,7 +302,7 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
       <div class="space-y-4">
         <form class="flex flex-wrap items-end gap-2" @submit.prevent="guardarPrecio">
           <Campo etiqueta="Precio especial por mes" para="ps-precio" class="w-56"
-                 :ayuda="empresaHist ? `Vacío = tarifa: ${fmtMoneda(empresaHist.precio_tarifa, true)} (${Math.max(empresaHist.sedes, 1)} ${empresaHist.sedes > 1 ? 'sedes' : 'sede'})` : ''">
+                 :ayuda="empresaHist ? `Vacío = tarifa: ${fmtMoneda(empresaHist.precio_tarifa, true)} (${Math.max(empresaHist.sedes, 1)} ${empresaHist.sedes > 1 ? 'salones' : 'salón'})` : ''">
             <CampoMoneda id="ps-precio" v-model="precio" /></Campo>
           <button class="btn-secundario">Guardar</button>
           <button type="button" class="btn-primario ml-auto" @click="empresaHist && abrirPago(empresaHist)"><Wallet class="size-4" /> Registrar pago</button>

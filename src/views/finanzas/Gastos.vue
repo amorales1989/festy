@@ -116,7 +116,7 @@ async function borrar(g: Fila<'gastos'>) {
         <Campo etiqueta="Medio de pago" para="g-medio"><select id="g-medio" v-model="f.medio" class="entrada"><option v-for="(m, k) in MEDIOS_PAGO" :key="k" :value="k">{{ m }}</option></select></Campo>
         <Campo etiqueta="Sale de la cuenta" para="g-cuenta"><SelectorCuenta id="g-cuenta" v-model="f.cuenta_id" :medio="f.medio" /></Campo>
         <Campo etiqueta="Proveedor" para="g-prov"><input id="g-prov" v-model="f.proveedor" class="entrada" /></Campo>
-        <Campo v-if="org.sucursalesActivas.length > 1" etiqueta="Sede" para="g-suc">
+        <Campo v-if="org.sucursalesActivas.length > 1" etiqueta="Salón" para="g-suc">
           <select id="g-suc" v-model="f.sucursal_id" class="entrada"><option value="">General</option><option v-for="s in org.sucursalesActivas" :key="s.id" :value="s.id">{{ s.nombre }}</option></select>
         </Campo>
         <p v-if="errorForm" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 sm:col-span-2" role="alert">{{ errorForm }}</p>
