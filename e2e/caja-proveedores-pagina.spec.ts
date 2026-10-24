@@ -99,6 +99,15 @@ test.describe.serial('caja, proveedores y página pública', () => {
     await expect(v.getByRole('link', { name: 'Escribirles por WhatsApp' })).toHaveAttribute('href', /wa\.me\/5491155550000/)
     await visitante.close()
 
+    // El pedido aparece en el Inicio con el teléfono y los botones para contactar
+    await page.goto('/')
+    const pedido = page.getByRole('region', { name: /desde tu página/ })
+    await expect(pedido.getByText('Visitante Web')).toBeVisible()
+    await expect(pedido.getByRole('link', { name: 'Llamar a Visitante Web' })).toHaveAttribute('href', 'tel:+5491144445555')
+    await expect(pedido.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('href', /wa\.me\/5491144445555/)
+    await captura(page, '24-inicio-pedido-web')
+    await pedido.getByRole('button', { name: 'Ya lo contacté' }).click()
+    await expect(page.getByRole('region', { name: /desde tu página/ })).toHaveCount(0)
     await page.goto('/reservas?estado=consulta')
     await expect(page.getByText('Pedido web · Visitante Web').first()).toBeVisible()
   })

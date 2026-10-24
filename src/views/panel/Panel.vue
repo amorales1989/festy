@@ -18,6 +18,7 @@ import InsigniaEstado from '@/components/ui/InsigniaEstado.vue'
 import { MODALIDADES_ENTREVISTA } from '@/lib/catalogos'
 import CampoFecha from '@/components/ui/CampoFecha.vue'
 import ChecklistConfiguracion from './ChecklistConfiguracion.vue'
+import PedidosWeb from './PedidosWeb.vue'
 import { useOrganizacion } from '@/stores/organizacion'
 import { useSesion } from '@/stores/sesion'
 import { useAcciones } from '@/stores/acciones'
@@ -247,6 +248,8 @@ const diaCorto = (iso: string) => format(fechaDeISO(iso), 'EEE d/MM', { locale: 
       </label>
       <button v-if="filtrosActivos" class="btn-fantasma btn-chico" @click="limpiarFiltros">Quitar filtros</button>
     </section>
+
+    <PedidosWeb v-if="org.puede('reservas.ver')" />
 
     <ChecklistConfiguracion />
 

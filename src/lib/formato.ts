@@ -136,6 +136,7 @@ export function tiempoRelativo(valor: string, zona: string): string {
   const abs = Math.abs(ms)
   const futuro = ms > 0
   const min = Math.round(abs / 6e4)
+  if (min < 1) return futuro ? 'en un momento' : 'recién'
   if (min < 60) return futuro ? `en ${min} min` : `hace ${min} min`
   const hs = Math.round(min / 60)
   if (hs < 48) return futuro ? `en ${hs} h` : `hace ${hs} h`

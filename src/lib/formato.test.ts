@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { aLocal, desdeLocal, fmtFecha, fmtFechaHora, fmtMoneda, parsearFechaAR, parsearMonto, sumarDiasISO } from './formato'
+import { aLocal, desdeLocal, fmtFecha, fmtFechaHora, fmtMoneda, parsearFechaAR, parsearMonto, sumarDiasISO, tiempoRelativo } from './formato'
 
 const BA = 'America/Argentina/Buenos_Aires'
 
@@ -49,5 +49,14 @@ describe('zona horaria de la organización', () => {
   it('ida y vuelta', () => {
     expect(aLocal('2026-11-15T00:00:00.000Z', BA)).toEqual({ fecha: '2026-11-14', hora: '21:00' })
     expect(fmtFechaHora('2026-11-15T08:30:00.000Z', BA)).toBe('15/11/2026 05:30')
+  })
+})
+
+describe('tiempoRelativo', () => {
+  it('dice "recién" en el primer minuto y minutos u horas después', () => {
+    const hace = (ms: number) => new Date(Date.now() - ms).toISOString()
+    expect(tiempoRelativo(hace(10_000), 'America/Argentina/Buenos_Aires')).toBe('recién')
+    expect(tiempoRelativo(hace(5 * 6e4), 'America/Argentina/Buenos_Aires')).toBe('hace 5 min')
+    expect(tiempoRelativo(hace(3 * 36e5), 'America/Argentina/Buenos_Aires')).toBe('hace 3 h')
   })
 })
