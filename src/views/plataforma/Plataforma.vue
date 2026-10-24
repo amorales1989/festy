@@ -259,7 +259,9 @@ async function reactivar(e: Empresa) {
                 <span v-if="e.estado === 'suspendida' && e.suspension_motivo" class="block text-xs text-rose-700">{{ e.suspension_motivo }}</span>
                 <span v-else-if="e.estado === 'baja_solicitada'" class="block text-xs text-rose-700">{{ ESTADOS[e.estado] }}</span></td>
               <td class="whitespace-nowrap text-right"><span class="tabular-nums">{{ fmtMoneda(e.precio, true) }}</span>
-                <span class="block text-xs text-slate-500">{{ e.precio_especial !== null ? 'precio especial' : `tarifa · ${Math.max(e.sedes, 1)} ${e.sedes > 1 ? 'salones' : 'salón'}` }}</span></td>
+                <span class="block text-xs text-slate-500">
+                  <span :class="e.sedes > 1 && 'font-semibold text-slate-700'">{{ Math.max(e.sedes, 1) }} {{ e.sedes > 1 ? 'salones' : 'salón' }}</span>
+                  · {{ e.precio_especial !== null ? `precio especial (tarifa ${fmtMoneda(e.precio_tarifa, true)})` : 'tarifa' }}</span></td>
               <td class="whitespace-nowrap"><template v-if="e.ultimo_pago">{{ fmtFecha(e.ultimo_pago.fecha, ZONA_POR_DEFECTO) }}
                 <span class="block text-xs text-slate-500">{{ fmtMoneda(e.ultimo_pago.monto, true) }} · {{ MEDIOS_PAGO[e.ultimo_pago.medio] ?? e.ultimo_pago.medio }}{{ e.ultimo_pago.meses > 1 ? ` · ${e.ultimo_pago.meses} meses` : '' }}</span></template>
                 <span v-else class="text-slate-400">—</span></td>

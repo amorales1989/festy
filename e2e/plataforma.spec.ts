@@ -51,7 +51,7 @@ test.describe.serial('administración de la plataforma', () => {
     await page.getByRole('button', { name: 'Listo' }).click()
     const fila = page.getByRole('row', { name: new RegExp(duenio.empresa) })
     await expect(fila).toContainText('$ 30.000')
-    await expect(fila).toContainText('tarifa · 1 salón')
+    await expect(fila).toContainText('1 salón · tarifa')
     await expect(fila).toContainText('Sin pagos')
     // Registrar el pago de la suscripción
     await fila.getByRole('button', { name: 'Registrar pago' }).click()
