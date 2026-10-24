@@ -110,5 +110,11 @@ test.describe.serial('caja, proveedores y página pública', () => {
     await expect(page.getByRole('region', { name: /desde tu página/ })).toHaveCount(0)
     await page.goto('/reservas?estado=consulta')
     await expect(page.getByText('Pedido web · Visitante Web').first()).toBeVisible()
+
+    // Estadísticas: el pedido cuenta como consulta recibida desde la página
+    await page.goto('/estadisticas')
+    await expect(page.getByRole('heading', { name: 'Embudo de consultas' })).toBeVisible()
+    await expect(page.getByText(/desde tu página web/)).toBeVisible()
+    await captura(page, '25-estadisticas')
   })
 })

@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { quitarPush, registrarPush } from '@/lib/app'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  CalendarDays, ChevronsUpDown, FileText, House, ListChecks, LogOut, Menu, PartyPopper, Plus,
+  ChartColumnBig, CalendarDays, ChevronsUpDown, FileText, House, ListChecks, LogOut, Menu, PartyPopper, Plus,
   Settings, Users, Wallet, X,
 } from 'lucide-vue-next'
 import BusquedaGlobal from '@/components/BusquedaGlobal.vue'
@@ -30,11 +30,12 @@ const navegacion = computed(() => [
   { a: '/presupuestos', etiqueta: 'Presupuestos', icono: FileText, visible: org.puede('presupuestos.ver') },
   { a: '/clientes', etiqueta: 'Clientes', icono: Users, visible: org.puede('clientes.ver') },
   { a: org.puede('pagos.ver') ? '/cobros' : '/gastos', etiqueta: 'Finanzas', icono: Wallet, visible: org.puede('pagos.ver') || org.puede('gastos.ver') },
+  { a: '/estadisticas', etiqueta: 'Estadísticas', icono: ChartColumnBig, visible: org.puede('reservas.ver') },
   { a: '/tareas', etiqueta: 'Tareas', icono: ListChecks, visible: org.puede('tareas.ver') },
   { a: '/configuracion', etiqueta: 'Ajustes', icono: Settings, visible: true },
 ].filter((n) => n.visible))
 
-const navegacionInferior = computed(() => navegacion.value.filter((n) => n.a !== '/configuracion' && n.a !== '/tareas').slice(0, 4))
+const navegacionInferior = computed(() => navegacion.value.filter((n) => n.a !== '/configuracion' && n.a !== '/tareas' && n.a !== '/estadisticas').slice(0, 4))
 
 function activo(a: string) {
   if (a === '/presupuestos') return route.path.startsWith('/presupuestos') || route.path.startsWith('/catalogo')

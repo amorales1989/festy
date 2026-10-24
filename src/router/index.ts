@@ -36,6 +36,7 @@ const rutas: RouteRecordRaw[] = [
       { path: 'catalogo', name: 'catalogo', component: () => import('@/views/ventas/Catalogo.vue'), meta: { permiso: 'presupuestos.ver', titulo: 'Catálogo de servicios' } },
       { path: 'clientes', name: 'clientes', component: () => import('@/views/clientes/ClientesLista.vue'), meta: { permiso: 'clientes.ver', titulo: 'Clientes' } },
       { path: 'clientes/:id', name: 'cliente', component: () => import('@/views/clientes/ClienteDetalle.vue'), meta: { permiso: 'clientes.ver', titulo: 'Cliente' } },
+      { path: 'estadisticas', name: 'estadisticas', component: () => import('@/views/estadisticas/Estadisticas.vue'), meta: { permiso: 'reservas.ver', titulo: 'Estadísticas' } },
       { path: 'tareas', name: 'tareas', component: () => import('@/views/tareas/Tareas.vue'), meta: { permiso: 'tareas.ver', titulo: 'Tareas' } },
       { path: 'cobros', name: 'cobros', component: () => import('@/views/finanzas/Cobros.vue'), meta: { permiso: 'pagos.ver', titulo: 'Cobros' } },
       { path: 'garantias', name: 'garantias', component: () => import('@/views/finanzas/Garantias.vue'), meta: { permiso: 'pagos.ver', titulo: 'Garantías' } },
