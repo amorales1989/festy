@@ -2,7 +2,7 @@
 // Estadísticas de la empresa: resumen del período con comparación contra el
 // período anterior de igual duración, evolución y desgloses.
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { ChartColumnBig, Download, Minus, TrendingDown, TrendingUp } from 'lucide-vue-next'
+import { Download, Minus, TrendingDown, TrendingUp } from 'lucide-vue-next'
 import CampoFecha from '@/components/ui/CampoFecha.vue'
 import Cargando from '@/components/ui/Cargando.vue'
 import BarrasHorizontales, { type FilaBarra } from '@/components/estadisticas/BarrasHorizontales.vue'
@@ -166,6 +166,49 @@ const filasMedios = computed<FilaBarra[]>(() => (datos.value?.medios_pago ?? [])
 const filasGastos = computed<FilaBarra[]>(() => (datos.value?.gastos_categoria ?? []).map((g) => ({ clave: g.categoria, etiqueta: CATEGORIAS_GASTO[g.categoria] ?? g.categoria, valor: Number(g.monto) })))
 const fmtPct = (v: number) => `${v.toLocaleString('es-AR')} %`
 
+
+// --- Organización de la pantalla: 4 números principales, el resto en una franja ---
+const PRINCIPALES = ['Facturado', 'Cobrado', 'Ganancia de los eventos', 'Eventos']
+const PRINCIPALES_SIN_PLATA = ['Eventos', 'Consultas recibidas', 'Conversión', 'Invitados']
+const principales = computed(() => {
+  const claves = conPlata.value ? PRINCIPALES : PRINCIPALES_SIN_PLATA
+  return claves.map((c) => indicadores.value.find((i) => i.titulo === c)).filter((i): i is Indicador => !!i)
+})
+const secundarios = computed(() => indicadores.value.filter((i) => !principales.value.includes(i)))
+
+type VistaEvolucion = 'plata' | 'facturado' | 'eventos'
+const vistaEvolucion = ref<VistaEvolucion>('plata')
+const vistasEvolucion = computed(() => [
+  ...(conPlata.value || conGastos.value ? [{ clave: 'plata' as const, etiqueta: conPlata.value && conGastos.value ? 'Ingresos y gastos' : conPlata.value ? 'Ingresos' : 'Gastos' }] : []),
+  ...(conPlata.value ? [{ clave: 'facturado' as const, etiqueta: 'Facturado' }] : []),
+  { clave: 'eventos' as const, etiqueta: 'Eventos' },
+])
+watch(vistasEvolucion, (v) => { if (!v.some((x) => x.clave === vistaEvolucion.value)) vistaEvolucion.value = v[0]!.clave }, { immediate: true })
+const seriesEvolucion = computed(() => {
+  const d = datos.value
+  if (!d) return []
+  if (vistaEvolucion.value === 'plata') return [
+    ...(conPlata.value ? [{ nombre: 'Cobrado', color: SERIE_1, valores: d.series.map((s) => Number(s.cobrado ?? 0)) }] : []),
+    ...(conGastos.value ? [{ nombre: 'Gastos', color: SERIE_2, valores: d.series.map((s) => Number(s.gastos ?? 0)) }] : []),
+  ]
+  if (vistaEvolucion.value === 'facturado') return [{ nombre: 'Facturado', color: SERIE_1, valores: d.series.map((s) => Number(s.facturado ?? 0)) }]
+  return [{ nombre: 'Eventos', color: SERIE_1, valores: d.series.map((s) => s.eventos) }]
+})
+const enPlata = computed(() => vistaEvolucion.value !== 'eventos')
+
+type VistaDetalle = 'embudo' | 'tipos' | 'espacios' | 'dias' | 'origen' | 'medios' | 'gastos' | 'clientes'
+const vistaDetalle = ref<VistaDetalle>('embudo')
+const vistasDetalle = computed(() => [
+  { clave: 'embudo' as const, etiqueta: 'Embudo de ventas' },
+  { clave: 'tipos' as const, etiqueta: 'Tipos de evento' },
+  { clave: 'espacios' as const, etiqueta: 'Espacios' },
+  { clave: 'dias' as const, etiqueta: 'Días' },
+  { clave: 'origen' as const, etiqueta: 'Origen' },
+  ...(conPlata.value ? [{ clave: 'medios' as const, etiqueta: 'Medios de pago' }] : []),
+  ...(conGastos.value ? [{ clave: 'gastos' as const, etiqueta: 'Gastos' }] : []),
+  { clave: 'clientes' as const, etiqueta: 'Mejores clientes' },
+])
+
 // --- PDF ------------------------------------------------------------------------------
 async function exportar() {
   const d = datos.value
@@ -199,101 +242,107 @@ async function exportar() {
 </script>
 
 <template>
-  <div class="space-y-5" :style="{ '--serie-1': SERIE_1 }">
+  <div class="space-y-4" :style="{ '--serie-1': SERIE_1 }">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="titulo-pagina">Estadísticas</h1>
         <p v-if="datos" class="text-sm text-slate-500">Del {{ fmtFecha(datos.periodo.desde, org.zona) }} al {{ fmtFecha(datos.periodo.hasta, org.zona) }} · comparado con {{ textoAnterior }}</p>
       </div>
-      <button v-if="org.puede('datos.exportar')" class="btn-secundario" :disabled="!datos" @click="exportar"><Download class="size-4" /> PDF</button>
-    </div>
-
-    <div class="flex flex-wrap items-end gap-2">
-      <nav class="flex max-w-full overflow-x-auto rounded-lg bg-slate-100 p-0.5" aria-label="Período">
-        <button v-for="(p, k) in { ...PERIODOS, personalizado: { etiqueta: 'Personalizado' } }" :key="k" type="button"
-                :class="['shrink-0 rounded-md px-3 py-1.5 text-sm font-medium', periodo === k ? 'bg-white shadow-sm' : 'text-slate-600']"
-                :aria-pressed="periodo === k" @click="periodo = k as ClavePeriodo">{{ p.etiqueta }}</button>
-      </nav>
-      <template v-if="periodo === 'personalizado'">
-        <div class="w-36"><CampoFecha v-model="rango.desde" /></div>
-        <div class="w-36"><CampoFecha v-model="rango.hasta" /></div>
-      </template>
+      <div class="flex flex-wrap items-center gap-2">
+        <template v-if="periodo === 'personalizado'">
+          <div class="w-36"><CampoFecha v-model="rango.desde" /></div>
+          <div class="w-36"><CampoFecha v-model="rango.hasta" /></div>
+        </template>
+        <select v-model="periodo" class="entrada w-auto" aria-label="Período">
+          <option v-for="(p, k) in PERIODOS" :key="k" :value="k">{{ p.etiqueta }}</option>
+          <option value="personalizado">Personalizado…</option>
+        </select>
+        <button v-if="org.puede('datos.exportar')" class="btn-secundario" :disabled="!datos" @click="exportar"><Download class="size-4" /> PDF</button>
+      </div>
     </div>
 
     <p v-if="error" class="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{{ error }}</p>
     <Cargando v-if="cargando && !datos" />
     <template v-else-if="datos">
-      <section aria-label="Resumen" :class="['grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4', cargando && 'opacity-60']">
-        <div v-for="i in indicadores" :key="i.titulo" class="tarjeta min-w-0 p-3 sm:p-4">
-          <p class="text-sm text-slate-500">{{ i.titulo }}</p>
-          <p class="mt-1 truncate text-lg font-semibold tabular-nums text-slate-900 sm:text-2xl">{{ i.valor }}</p>
-          <p v-if="i.variacion" :class="['mt-1 flex items-center gap-1 text-xs font-medium', TONOS[i.variacion.tono]]">
-            <component :is="i.variacion.icono" class="size-3.5" aria-hidden="true" /> {{ i.variacion.texto }}</p>
-          <p v-if="i.detalle" class="mt-0.5 text-xs text-slate-500">{{ i.detalle }}</p>
+      <!-- 1. Resumen: 4 números y una franja con el resto -->
+      <section aria-label="Resumen" :class="['tarjeta overflow-hidden', cargando && 'opacity-60']">
+        <div class="grid grid-cols-2 lg:grid-cols-4">
+          <div v-for="(i, n) in principales" :key="i.titulo"
+               :class="['min-w-0 p-4 sm:p-5', n % 2 === 1 && 'border-l border-slate-100', n >= 2 && 'border-t border-slate-100 lg:border-t-0', n === 2 && 'lg:border-l']">
+            <p class="text-sm text-slate-500">{{ i.titulo }}</p>
+            <p class="mt-1 truncate text-xl font-semibold tabular-nums text-slate-900 sm:text-3xl">{{ i.valor }}</p>
+            <p v-if="i.variacion" :class="['mt-1 flex items-center gap-1 text-xs font-medium', TONOS[i.variacion.tono]]">
+              <component :is="i.variacion.icono" class="size-3.5" aria-hidden="true" /> {{ i.variacion.texto }}</p>
+            <p v-else-if="i.detalle" class="mt-1 truncate text-xs text-slate-500">{{ i.detalle }}</p>
+          </div>
         </div>
+        <dl class="grid grid-cols-2 gap-x-6 gap-y-3 border-t border-slate-100 bg-slate-50/60 px-4 py-4 sm:grid-cols-3 sm:px-5 lg:grid-cols-5">
+          <div v-for="i in secundarios" :key="i.titulo" class="min-w-0" :title="i.detalle">
+            <dt class="truncate text-xs text-slate-500">{{ i.titulo }}</dt>
+            <dd class="flex items-baseline gap-1.5">
+              <span class="truncate font-semibold tabular-nums text-slate-900">{{ i.valor }}</span>
+              <component :is="i.variacion.icono" v-if="i.variacion && i.variacion.tono !== 'neutro'" :class="['size-3.5 shrink-0', TONOS[i.variacion.tono]]"
+                         :aria-label="i.variacion.texto" />
+            </dd>
+          </div>
+        </dl>
       </section>
 
-      <div class="grid gap-4 xl:grid-cols-2">
-        <section v-if="conPlata || conGastos" class="tarjeta p-4">
-          <h2 class="font-semibold">Cobrado y gastos por {{ nombreTramo }}</h2>
-          <GraficoTiempo class="mt-2" tipo="linea" :titulo="`Cobrado y gastos por ${nombreTramo}`" :etiquetas="etiquetasTiempo" :formato="plata" :formato-eje="plataEje"
-                         :series="[...(conPlata ? [{ nombre: 'Cobrado', color: SERIE_1, valores: datos.series.map((s) => Number(s.cobrado ?? 0)) }] : []),
-                                   ...(conGastos ? [{ nombre: 'Gastos', color: SERIE_2, valores: datos.series.map((s) => Number(s.gastos ?? 0)) }] : [])]" />
-        </section>
-        <section class="tarjeta p-4">
-          <h2 class="font-semibold">{{ conPlata ? 'Facturado' : 'Eventos' }} por {{ nombreTramo }}</h2>
-          <p class="text-xs text-slate-500">Según la fecha del evento.</p>
-          <GraficoTiempo class="mt-2" :titulo="`${conPlata ? 'Facturado' : 'Eventos'} por ${nombreTramo}`" :etiquetas="etiquetasTiempo"
-                         :formato="conPlata ? plata : (v: number) => String(v)" :formato-eje="conPlata ? plataEje : (v: number) => String(Math.round(v))"
-                         :series="[conPlata ? { nombre: 'Facturado', color: SERIE_1, valores: datos.series.map((s) => Number(s.facturado ?? 0)) }
-                                            : { nombre: 'Eventos', color: SERIE_1, valores: datos.series.map((s) => s.eventos) }]" />
-        </section>
-      </div>
+      <!-- 2. Evolución: un gráfico con selector -->
+      <section class="tarjeta p-4 sm:p-5" aria-labelledby="titulo-evolucion">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="titulo-evolucion" class="font-semibold">Evolución por {{ nombreTramo }}</h2>
+          <div class="flex rounded-lg bg-slate-100 p-0.5" role="tablist" aria-label="Qué mostrar">
+            <button v-for="v in vistasEvolucion" :key="v.clave" type="button" role="tab" :aria-selected="vistaEvolucion === v.clave"
+                    :class="['rounded-md px-3 py-1 text-sm font-medium', vistaEvolucion === v.clave ? 'bg-white shadow-sm' : 'text-slate-600']"
+                    @click="vistaEvolucion = v.clave">{{ v.etiqueta }}</button>
+          </div>
+        </div>
+        <GraficoTiempo :key="vistaEvolucion" class="mt-3" :tipo="vistaEvolucion === 'plata' ? 'linea' : 'columnas'" :titulo="`Evolución por ${nombreTramo}`"
+                       :etiquetas="etiquetasTiempo" :series="seriesEvolucion"
+                       :formato="enPlata ? plata : (v: number) => String(v)" :formato-eje="enPlata ? plataEje : (v: number) => String(Math.round(v))" :enteros="!enPlata" />
+      </section>
 
-      <div class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-        <section class="tarjeta p-4">
-          <h2 class="mb-3 font-semibold">Embudo de consultas</h2>
-          <BarrasHorizontales :filas="filasEmbudo" tono="ordinal" vacio="No entraron consultas en el período." />
-        </section>
-        <section class="tarjeta p-4">
-          <h2 class="mb-3 font-semibold">Eventos por tipo</h2>
-          <BarrasHorizontales :filas="filasTipo" vacio="No hay eventos en el período." />
-        </section>
-        <section class="tarjeta p-4">
-          <h2 class="font-semibold">Ocupación por espacio</h2>
-          <p class="mb-3 text-xs text-slate-500">Días con eventos sobre los {{ datos.periodo.dias }} días del período.</p>
-          <BarrasHorizontales :filas="filasEspacio" :formato="fmtPct" vacio="No hay eventos en el período." />
-        </section>
-        <section class="tarjeta p-4">
-          <h2 class="mb-3 font-semibold">Eventos por día de la semana</h2>
-          <BarrasHorizontales :filas="filasDia" />
-        </section>
-        <section class="tarjeta p-4">
-          <h2 class="mb-3 font-semibold">¿Cómo te conocieron?</h2>
-          <BarrasHorizontales :filas="filasOrigen" vacio="No se cargaron clientes nuevos en el período." />
-        </section>
-        <section v-if="conPlata" class="tarjeta p-4">
-          <h2 class="mb-3 font-semibold">Cobros por medio de pago</h2>
-          <BarrasHorizontales :filas="filasMedios" :formato="plata" vacio="No hubo cobros en el período." />
-        </section>
-        <section v-if="conGastos" class="tarjeta p-4">
-          <h2 class="mb-3 font-semibold">Gastos por categoría</h2>
-          <BarrasHorizontales :filas="filasGastos" :formato="plata" vacio="No hubo gastos en el período." />
-        </section>
-        <section class="tarjeta p-4 md:col-span-2 2xl:col-span-1">
-          <h2 class="mb-3 font-semibold">Mejores clientes</h2>
-          <p v-if="!datos.top_clientes.length" class="py-6 text-center text-sm text-slate-500">No hay eventos en el período.</p>
-          <ol v-else class="divide-y divide-slate-100 text-sm">
-            <li v-for="(c, i) in datos.top_clientes" :key="c.id" class="flex items-center gap-3 py-2">
-              <span class="w-5 text-right text-xs text-slate-400">{{ i + 1 }}</span>
-              <RouterLink :to="{ name: 'cliente', params: { id: c.id } }" class="enlace min-w-0 flex-1 truncate">{{ c.cliente }}</RouterLink>
-              <span class="text-xs text-slate-500">{{ c.eventos }} {{ c.eventos === 1 ? 'evento' : 'eventos' }}</span>
-              <span v-if="c.facturado !== null" class="w-28 text-right font-semibold tabular-nums">{{ plata(c.facturado) }}</span>
-            </li>
-          </ol>
-        </section>
-      </div>
-      <p class="flex items-center gap-1.5 text-xs text-slate-500"><ChartColumnBig class="size-3.5" /> Los eventos se cuentan por su fecha (señados, confirmados o realizados); cobros y gastos, por la fecha en que se registraron.</p>
+      <!-- 3. Detalle: una pestaña a la vez -->
+      <section class="tarjeta p-4 sm:p-5" aria-labelledby="titulo-detalle">
+        <h2 id="titulo-detalle" class="sr-only">Detalle</h2>
+        <div class="-mx-1 flex overflow-x-auto border-b border-slate-200" role="tablist" aria-label="Detalle">
+          <button v-for="v in vistasDetalle" :key="v.clave" type="button" role="tab" :aria-selected="vistaDetalle === v.clave"
+                  :class="['-mb-px shrink-0 border-b-2 px-3 py-2 text-sm font-medium', vistaDetalle === v.clave ? 'border-marca-600 text-marca-700' : 'border-transparent text-slate-500 hover:text-slate-700']"
+                  @click="vistaDetalle = v.clave">{{ v.etiqueta }}</button>
+        </div>
+        <div class="mx-auto mt-4 max-w-3xl">
+          <template v-if="vistaDetalle === 'embudo'">
+            <p class="mb-3 text-sm text-slate-500">De las consultas que entraron en el período, cuántas avanzaron.</p>
+            <BarrasHorizontales :filas="filasEmbudo" tono="ordinal" vacio="No entraron consultas en el período." />
+          </template>
+          <BarrasHorizontales v-else-if="vistaDetalle === 'tipos'" :filas="filasTipo" vacio="No hay eventos en el período." />
+          <template v-else-if="vistaDetalle === 'espacios'">
+            <p class="mb-3 text-sm text-slate-500">Ocupación: días con eventos sobre los {{ datos.periodo.dias }} días del período.</p>
+            <BarrasHorizontales :filas="filasEspacio" :formato="fmtPct" vacio="No hay eventos en el período." />
+          </template>
+          <BarrasHorizontales v-else-if="vistaDetalle === 'dias'" :filas="filasDia" />
+          <template v-else-if="vistaDetalle === 'origen'">
+            <p class="mb-3 text-sm text-slate-500">Cómo te conocieron los clientes nuevos del período.</p>
+            <BarrasHorizontales :filas="filasOrigen" vacio="No se cargaron clientes nuevos en el período." />
+          </template>
+          <BarrasHorizontales v-else-if="vistaDetalle === 'medios'" :filas="filasMedios" :formato="plata" vacio="No hubo cobros en el período." />
+          <BarrasHorizontales v-else-if="vistaDetalle === 'gastos'" :filas="filasGastos" :formato="plata" vacio="No hubo gastos en el período." />
+          <template v-else>
+            <p v-if="!datos.top_clientes.length" class="py-6 text-center text-sm text-slate-500">No hay eventos en el período.</p>
+            <ol v-else class="divide-y divide-slate-100 text-sm">
+              <li v-for="(c, i) in datos.top_clientes" :key="c.id" class="flex items-center gap-3 py-2">
+                <span class="w-5 text-right text-xs text-slate-400">{{ i + 1 }}</span>
+                <RouterLink :to="{ name: 'cliente', params: { id: c.id } }" class="enlace min-w-0 flex-1 truncate">{{ c.cliente }}</RouterLink>
+                <span class="text-xs text-slate-500">{{ c.eventos }} {{ c.eventos === 1 ? 'evento' : 'eventos' }}</span>
+                <span v-if="c.facturado !== null" class="w-28 text-right font-semibold tabular-nums">{{ plata(c.facturado) }}</span>
+              </li>
+            </ol>
+          </template>
+        </div>
+      </section>
+      <p class="text-xs text-slate-500">Los eventos se cuentan por su fecha (señados, confirmados o realizados); cobros y gastos, por la fecha en que se registraron.
+        Pasá el mouse por un indicador para ver su detalle.</p>
     </template>
   </div>
 </template>

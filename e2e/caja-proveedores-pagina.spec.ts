@@ -113,8 +113,9 @@ test.describe.serial('caja, proveedores y página pública', () => {
 
     // Estadísticas: el pedido cuenta como consulta recibida desde la página
     await page.goto('/estadisticas')
-    await expect(page.getByRole('heading', { name: 'Embudo de consultas' })).toBeVisible()
-    await expect(page.getByText(/desde tu página web/)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Evolución/ })).toBeVisible()
+    await expect(page.getByRole('tab', { name: 'Embudo de ventas' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByText('Consultas recibidas').first()).toBeVisible()
     await captura(page, '25-estadisticas')
   })
 })

@@ -5,8 +5,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 export interface Serie { nombre: string; color: string; valores: number[] }
-const props = withDefaults(defineProps<{ etiquetas: string[]; series: Serie[]; tipo?: 'columnas' | 'linea'; formato?: (v: number) => string; formatoEje?: (v: number) => string; titulo: string }>(), {
-  tipo: 'columnas', formato: (v: number) => v.toLocaleString('es-AR'), formatoEje: undefined,
+const props = withDefaults(defineProps<{ etiquetas: string[]; series: Serie[]; tipo?: 'columnas' | 'linea'; formato?: (v: number) => string; formatoEje?: (v: number) => string; titulo: string; enteros?: boolean }>(), {
+  tipo: 'columnas', formato: (v: number) => v.toLocaleString('es-AR'), formatoEje: undefined, enteros: false,
 })
 
 const contenedor = ref<HTMLDivElement | null>(null)
@@ -28,7 +28,8 @@ const internoY = ALTO - M.arriba - M.abajo
 /** Máximo "lindo" para el eje: 1, 2, 2.5 o 5 × potencia de 10. */
 const maxEje = computed(() => {
   const max = Math.max(0, ...props.series.flatMap((s) => s.valores))
-  if (max <= 0) return 1
+  if (max <= 0) return props.enteros ? 4 : 1
+  if (props.enteros) return Math.max(4, Math.ceil(max / 4) * 4)  // cantidades: marcas enteras
   const p = 10 ** Math.floor(Math.log10(max))
   for (const f of [1, 2, 2.5, 5, 10]) if (f * p >= max) return f * p
   return 10 * p
