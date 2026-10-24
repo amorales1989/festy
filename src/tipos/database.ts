@@ -1715,7 +1715,9 @@ export type Database = {
           id: string
           nombre: string
           organizacion_id: string
+          personas_incluidas: number | null
           precio: number
+          precio_persona_extra: number | null
           tipo: string
           unidad: string
         }
@@ -1730,7 +1732,9 @@ export type Database = {
           id?: string
           nombre: string
           organizacion_id: string
+          personas_incluidas?: number | null
           precio: number
+          precio_persona_extra?: number | null
           tipo?: string
           unidad?: string
         }
@@ -1745,7 +1749,9 @@ export type Database = {
           id?: string
           nombre?: string
           organizacion_id?: string
+          personas_incluidas?: number | null
           precio?: number
+          precio_persona_extra?: number | null
           tipo?: string
           unidad?: string
         }

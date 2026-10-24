@@ -38,19 +38,26 @@ const grupos = computed(() => (['paquete', 'servicio', 'adicional'] as const).ma
 
 const abierto = ref(false)
 const sel = ref<Servicio | null>(null)
-const f = reactive({ nombre: '', descripcion: '', tipo: 'servicio', categoria: 'otro', unidad: 'evento', precio: null as number | null, costo: null as number | null })
+const f = reactive({ nombre: '', descripcion: '', tipo: 'servicio', categoria: 'otro', unidad: 'evento', precio: null as number | null, costo: null as number | null,
+  personas_incluidas: null as number | null, precio_persona_extra: null as number | null })
 const error = ref('')
 function abrir(s: Servicio | null = null, tipo = 'servicio') {
   sel.value = s
-  Object.assign(f, s ? { nombre: s.nombre, descripcion: s.descripcion ?? '', tipo: s.tipo, categoria: s.categoria, unidad: s.unidad, precio: Number(s.precio), costo: s.costo === null ? null : Number(s.costo) }
-    : { nombre: '', descripcion: '', tipo, categoria: 'otro', unidad: 'evento', precio: null, costo: null })
+  Object.assign(f, s ? { nombre: s.nombre, descripcion: s.descripcion ?? '', tipo: s.tipo, categoria: s.categoria, unidad: s.unidad, precio: Number(s.precio), costo: s.costo === null ? null : Number(s.costo),
+    personas_incluidas: s.personas_incluidas, precio_persona_extra: s.precio_persona_extra === null ? null : Number(s.precio_persona_extra) }
+    : { nombre: '', descripcion: '', tipo, categoria: 'otro', unidad: 'evento', precio: null, costo: null, personas_incluidas: null, precio_persona_extra: null })
   error.value = ''
   abierto.value = true
 }
 async function guardar() {
   if (f.nombre.trim().length < 2) { error.value = 'Ingresá un nombre.'; return }
   if (f.precio === null || f.precio < 0) { error.value = 'Ingresá el precio.'; return }
-  const datos = { ...f, nombre: f.nombre.trim(), descripcion: f.descripcion.trim() || null, precio: f.precio }
+  // Personas incluidas: solo para precios por evento, y siempre con el precio de la persona extra.
+  const incluidas = f.unidad === 'evento' && f.personas_incluidas ? f.personas_incluidas : null
+  if (incluidas && (!Number.isInteger(incluidas) || incluidas < 1)) { error.value = 'Las personas incluidas deben ser un número entero.'; return }
+  if (incluidas && f.precio_persona_extra === null) { error.value = 'Ingresá el precio por persona extra.'; return }
+  const datos = { ...f, nombre: f.nombre.trim(), descripcion: f.descripcion.trim() || null, precio: f.precio,
+    personas_incluidas: incluidas, precio_persona_extra: incluidas ? f.precio_persona_extra : null }
   try {
     if (sel.value) await api.put(rutaOrg(org.id, `servicios/${sel.value.id}`), datos)
     else await api.post(rutaOrg(org.id, 'servicios'), datos)
@@ -96,6 +103,9 @@ async function borrar(s: Servicio) {
             <p class="shrink-0 text-right"><span class="block font-semibold tabular-nums">{{ fmtMoneda(s.precio, true) }}</span>
               <span class="text-xs text-slate-500">{{ UNIDADES_SERVICIO[s.unidad]!.corta }}</span></p>
           </div>
+          <p v-if="s.personas_incluidas" class="mt-1 text-xs text-slate-600">
+            Hasta {{ s.personas_incluidas }} personas · extra {{ fmtMoneda(s.precio_persona_extra, true) }} c/u
+          </p>
           <p v-if="s.descripcion" class="mt-2 line-clamp-2 text-sm text-slate-600">{{ s.descripcion }}</p>
           <div v-if="puede" class="mt-auto flex justify-end gap-1 pt-2">
             <button class="btn-fantasma p-1.5" aria-label="Editar" @click="abrir(s)"><Pencil class="size-4" /></button>
@@ -123,6 +133,14 @@ async function borrar(s: Servicio) {
           </Campo>
           <Campo etiqueta="Rubro" para="s-cat">
             <select id="s-cat" v-model="f.categoria" class="entrada"><option v-for="(c, k) in CATEGORIAS_SERVICIO" :key="k" :value="k">{{ c }}</option></select>
+          </Campo>
+        </div>
+        <div v-if="f.unidad === 'evento'" class="grid gap-3 sm:grid-cols-2">
+          <Campo etiqueta="Personas incluidas (opcional)" para="s-incluidas" ayuda="Ej.: el precio cubre hasta 20 personas.">
+            <input id="s-incluidas" v-model.number="f.personas_incluidas" type="number" min="1" step="1" class="entrada" placeholder="Sin límite" />
+          </Campo>
+          <Campo v-if="f.personas_incluidas" etiqueta="Precio por persona extra" para="s-extra">
+            <CampoMoneda id="s-extra" v-model="f.precio_persona_extra" />
           </Campo>
         </div>
         <Campo etiqueta="Costo para vos (opcional)" para="s-costo" ayuda="No se muestra al cliente. Servirá para calcular la ganancia por evento.">

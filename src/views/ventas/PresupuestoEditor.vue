@@ -95,15 +95,36 @@ watch([() => p.tipo_evento, cliente], () => {
 })
 // Las líneas "por persona" acompañan la cantidad de invitados.
 watch(() => p.invitados, (n, viejo) => {
+  if (soloLectura.value) return
+  ajustarExtras()
   if (!n) return
-  for (const i of items.value) if (i.unidad === 'persona' && (i.cantidad === viejo || i.cantidad === 1)) i.cantidad = n
+  for (const i of items.value) if (i.unidad === 'persona' && !esExtra(i) && (i.cantidad === viejo || i.cantidad === 1)) i.cantidad = n
 })
 
 // --- Ítems ---------------------------------------------------------------------
+// Servicios con personas incluidas (ej.: salón hasta 20 personas): las personas de más
+// van en una línea aparte, justo debajo, que sigue a la cantidad de invitados.
+const conIncluidas = (sid: string | null) => catalogo.value.find((s) => s.id === sid && s.personas_incluidas) ?? null
+const esExtra = (i: Item) => i.unidad === 'persona' && !!conIncluidas(i.servicio_id)
+function ajustarExtras() {
+  for (let n = 0; n < items.value.length; n++) {
+    const base = items.value[n]!
+    const s = base.unidad === 'evento' ? conIncluidas(base.servicio_id) : null
+    if (!s) continue
+    const exceso = Math.max((p.invitados ?? 0) - s.personas_incluidas!, 0)
+    const sig = items.value[n + 1]
+    const tieneExtra = sig?.servicio_id === s.id && sig.unidad === 'persona'
+    if (exceso && tieneExtra) sig.cantidad = exceso
+    else if (exceso) items.value.splice(n + 1, 0, { servicio_id: s.id, descripcion: `Personas extra (más de ${s.personas_incluidas}) — ${s.nombre}`,
+      cantidad: exceso, unidad: 'persona', precio_unitario: Number(s.precio_persona_extra) })
+    else if (tieneExtra) items.value.splice(n + 1, 1)
+  }
+}
 const catalogoAbierto = ref(false)
 function agregarDelCatalogo(s: Fila<'servicios'>) {
   items.value.push({ servicio_id: s.id, descripcion: s.descripcion ? `${s.nombre} — ${s.descripcion}` : s.nombre,
     cantidad: s.unidad === 'persona' && p.invitados ? p.invitados : 1, unidad: s.unidad, precio_unitario: Number(s.precio) })
+  ajustarExtras()
   catalogoAbierto.value = false
 }
 function agregarLibre() {
@@ -392,7 +413,8 @@ async function eliminar() {
         <li v-for="s in catalogo" :key="s.id">
           <button type="button" class="flex w-full items-center gap-3 px-1 py-2.5 text-left hover:bg-slate-50" @click="agregarDelCatalogo(s)">
             <span class="min-w-0 flex-1"><span class="block text-sm font-medium">{{ s.nombre }}</span>
-              <span class="block truncate text-xs text-slate-500">{{ s.descripcion }}</span></span>
+              <span class="block truncate text-xs text-slate-500">{{ s.descripcion }}</span>
+              <span v-if="s.personas_incluidas" class="block text-xs text-slate-500">Hasta {{ s.personas_incluidas }} personas · extra {{ fmtMoneda(s.precio_persona_extra, true) }} c/u</span></span>
             <span class="text-right text-sm font-semibold tabular-nums">{{ fmtMoneda(s.precio, true) }}<span class="block text-xs font-normal text-slate-500">{{ UNIDADES_SERVICIO[s.unidad]?.corta }}</span></span>
             <Plus class="size-4 text-marca-600" />
           </button>

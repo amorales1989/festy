@@ -291,8 +291,10 @@ async function abrirAdicional() {
   adicionalAbierto.value = true
 }
 function elegirServicio(sv: Fila<'servicios'>) {
-  Object.assign(adic, { servicio_id: sv.id, descripcion: sv.nombre, unidad: sv.unidad, precio: Number(sv.precio),
-    cantidad: sv.unidad === 'persona' ? (reserva.value?.invitados ?? 1) : 1 })
+  // Con personas incluidas, las de más se suman al precio de la misma línea.
+  const exceso = sv.personas_incluidas ? Math.max((reserva.value?.invitados ?? 0) - sv.personas_incluidas, 0) : 0
+  Object.assign(adic, { servicio_id: sv.id, descripcion: exceso ? `${sv.nombre} (+${exceso} personas extra)` : sv.nombre, unidad: sv.unidad,
+    precio: Number(sv.precio) + exceso * Number(sv.precio_persona_extra), cantidad: sv.unidad === 'persona' ? (reserva.value?.invitados ?? 1) : 1 })
 }
 async function guardarAdicional() {
   errorAdic.value = ''
