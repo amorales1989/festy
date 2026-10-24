@@ -40,7 +40,7 @@ async function borrar(f: Fila<'feriados'>) {
 </script>
 
 <template>
-  <div class="max-w-3xl space-y-4">
+  <div class="space-y-4">
     <div class="rounded-lg bg-sky-50 px-4 py-3 text-sm text-sky-900">
       Los feriados se muestran en el calendario y generan un aviso al reservar, pero <strong>no bloquean</strong> la fecha.
       Si no abrís un feriado, creá un bloqueo desde el calendario. Se precargan los feriados nacionales inamovibles; los trasladables

@@ -599,7 +599,7 @@ function describirCambio(cambios: unknown): string {
         </section>
 
         <!-- Servicios contratados -->
-        <section class="tarjeta p-4 lg:col-span-2">
+        <section class="tarjeta p-4 lg:col-span-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="flex items-center gap-2 text-sm font-semibold"><Package class="size-4 text-marca-600" /> Servicios contratados</h2>
             <button v-if="org.puede('reservas.editar') && reserva.estado !== 'cancelada'" class="btn-secundario btn-chico" @click="abrirAdicional">

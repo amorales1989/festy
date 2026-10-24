@@ -65,7 +65,7 @@ async function guardar() {
 </script>
 
 <template>
-  <form class="tarjeta max-w-3xl space-y-4 p-5" @submit.prevent="guardar">
+  <form class="tarjeta space-y-4 p-5" @submit.prevent="guardar">
     <fieldset :disabled="!puede" class="grid gap-4 sm:grid-cols-2">
       <Campo etiqueta="Nombre comercial" para="o-nombre" requerido><input id="o-nombre" v-model="f.nombre" class="entrada" /></Campo>
       <Campo etiqueta="Razón social" para="o-rs"><input id="o-rs" v-model="f.razon_social" class="entrada" /></Campo>

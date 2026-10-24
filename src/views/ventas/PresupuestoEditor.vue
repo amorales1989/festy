@@ -396,7 +396,7 @@ async function eliminar() {
 
       <!-- Acciones -->
       <div class="fixed inset-x-0 bottom-[calc(4rem+var(--ins-bottom))] z-20 border-t border-slate-200 bg-white/95 px-4 py-2.5 backdrop-blur lg:bottom-0 lg:left-64">
-        <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <span class="w-full text-sm font-semibold tabular-nums sm:mr-auto sm:w-auto">Total {{ fmtMoneda(total) }}</span>
           <button v-if="!soloLectura" class="btn-secundario flex-1 sm:flex-none" :disabled="guardando" @click="guardarYAvisar">{{ guardando ? 'Guardando…' : 'Guardar' }}</button>
           <button class="btn-secundario flex-1 sm:flex-none" :disabled="guardando || !cliente" @click="descargar"><Download class="size-4" /> PDF</button>

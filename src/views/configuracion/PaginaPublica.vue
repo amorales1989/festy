@@ -54,7 +54,7 @@ async function copiar() {
 </script>
 
 <template>
-  <form class="tarjeta max-w-3xl space-y-4 p-5" @submit.prevent="guardar">
+  <form class="tarjeta space-y-4 p-5" @submit.prevent="guardar">
     <div>
       <h2 class="flex items-center gap-2 font-semibold"><Globe class="size-4 text-marca-600" /> Página web del salón</h2>
       <p class="mt-1 text-sm text-slate-600">Compartila en Instagram, Google o WhatsApp. Los clientes ven tus espacios, qué fechas están libres y te piden la suya:

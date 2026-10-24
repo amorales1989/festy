@@ -134,7 +134,7 @@ async function salir() {
         <RouterLink to="/configuracion/datos" class="font-semibold underline">Cancelar la baja</RouterLink>
       </div>
 
-      <main class="mx-auto max-w-7xl px-4 pt-6 pb-[calc(7rem+var(--ins-bottom))] sm:px-6 lg:px-8 lg:pb-8">
+      <main class="px-4 pt-6 pb-[calc(7rem+var(--ins-bottom))] sm:px-6 lg:px-8 lg:pb-8">
         <RouterView :key="org.id" />
       </main>
     </div>

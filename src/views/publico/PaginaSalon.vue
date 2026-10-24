@@ -120,7 +120,7 @@ const direccion = (s: Sede) => [s.direccion, s.localidad, s.provincia].filter(Bo
     <p v-else-if="errorCarga" class="mx-auto max-w-md px-4 pt-24 text-center text-sm text-rose-700" role="alert">{{ errorCarga }}</p>
     <template v-else-if="salon">
       <header class="text-white" :style="{ background: color }">
-        <div class="mx-auto flex max-w-5xl items-center gap-4 px-4 pt-[calc(2rem+var(--ins-top))] pb-8 sm:px-6">
+        <div class="flex items-center gap-4 px-4 pt-[calc(2rem+var(--ins-top))] pb-8 sm:px-6 lg:px-8">
           <img v-if="salon.logo" :src="salon.logo" alt="" class="h-16 w-auto max-w-[8rem] rounded-lg bg-white object-contain p-1.5" />
           <div>
             <h1 class="text-2xl font-bold sm:text-3xl">{{ salon.nombre }}</h1>
@@ -129,7 +129,7 @@ const direccion = (s: Sede) => [s.direccion, s.localidad, s.provincia].filter(Bo
         </div>
       </header>
 
-      <main class="mx-auto grid max-w-5xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-5">
+      <main class="grid gap-6 px-4 py-6 sm:px-6 lg:grid-cols-5 lg:px-8">
         <section class="space-y-4 lg:col-span-2">
           <p v-if="salon.descripcion" class="whitespace-pre-line text-slate-700">{{ salon.descripcion }}</p>
           <div class="space-y-2">
@@ -164,7 +164,7 @@ const direccion = (s: Sede) => [s.direccion, s.localidad, s.provincia].filter(Bo
                 <template v-for="(dia, i) in diasDelMes" :key="dia ?? `b${i}`">
                   <span v-if="!dia" />
                   <button v-else type="button" :disabled="estadoDia(dia) !== 'libre'"
-                          :class="['aspect-square rounded-lg text-sm tabular-nums',
+                          :class="['aspect-square rounded-lg text-sm tabular-nums lg:aspect-auto lg:h-14',
                                    pedido.fecha === dia ? 'font-semibold text-white' : estadoDia(dia) === 'libre' ? 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
                                      : estadoDia(dia) === 'ocupado' ? 'bg-slate-100 text-slate-400 line-through' : 'text-slate-300']"
                           :style="pedido.fecha === dia ? { background: color } : {}"
