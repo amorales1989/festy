@@ -2,15 +2,18 @@
 // Administración de Festy: alta de empresas cliente y listado de todas.
 // Solo para los administradores de la plataforma (lo verifica el servidor).
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ArrowLeft, Building2, Copy, KeyRound, LogOut, Plus, RefreshCw } from 'lucide-vue-next'
+import { ArrowLeft, Building2, CircleAlert, CircleCheck, Clock, Copy, History, KeyRound, LogOut, Plus, RefreshCw, Trash2, Wallet } from 'lucide-vue-next'
 import Modal from '@/components/ui/Modal.vue'
 import Campo from '@/components/ui/Campo.vue'
 import Cargando from '@/components/ui/Cargando.vue'
 import EstadoVacio from '@/components/ui/EstadoVacio.vue'
+import CampoFecha from '@/components/ui/CampoFecha.vue'
+import CampoMoneda from '@/components/ui/CampoMoneda.vue'
 import { api } from '@/lib/api'
 import { traducirError } from '@/lib/errores'
-import { fmtFecha, fmtFechaHora, ZONA_POR_DEFECTO } from '@/lib/formato'
-import { ZONAS_HORARIAS } from '@/lib/catalogos'
+import { fmtFecha, fmtFechaHora, fmtMoneda, hoyISO, ZONA_POR_DEFECTO } from '@/lib/formato'
+import { MEDIOS_PAGO, ZONAS_HORARIAS } from '@/lib/catalogos'
+import { useConfirmar } from '@/composables/useConfirmar'
 import { useOrganizacion } from '@/stores/organizacion'
 import { useSesion } from '@/stores/sesion'
 import { useNotificaciones } from '@/composables/useNotificaciones'
@@ -18,7 +21,10 @@ import { useNotificaciones } from '@/composables/useNotificaciones'
 interface Empresa {
   id: string; nombre: string; estado: string; creado_at: string; usuarios: number; eventos: number; ultimo_evento_cargado: string | null; pagina: string | null
   duenio: { nombre: string | null; email: string; ultimo_ingreso: string | null } | null
+  precio: number; precio_tarifa: number; precio_especial: number | null; sedes: number; pagado_hasta: string | null
+  ultimo_pago: { id: string; fecha: string; monto: number; medio: string; meses: number } | null
 }
+interface PagoSuscripcion { id: string; fecha: string; monto: number; medio: string; meses: number; cubre_desde: string; cubre_hasta: string; notas: string | null; registrado_por: string | null }
 
 const org = useOrganizacion()
 const sesion = useSesion()
@@ -79,6 +85,104 @@ const textoAcceso = computed(() => resultado.value
 async function copiar() {
   try { await navigator.clipboard.writeText(textoAcceso.value); exito('Datos de acceso copiados.') } catch { /* el navegador no permite copiar */ }
 }
+// --- Cobro de la suscripción -------------------------------------------------------
+const { confirmar } = useConfirmar()
+const { error: notificarError } = useNotificaciones()
+const hoy = hoyISO(ZONA_POR_DEFECTO)
+const diasEntre = (a: string, b: string) => Math.round((new Date(`${b}T00:00:00Z`).getTime() - new Date(`${a}T00:00:00Z`).getTime()) / 864e5)
+/** Suma meses a una fecha 'yyyy-MM-dd' (como el SQL: el 31 pasa al último día del mes). */
+function sumarMeses(iso: string, meses: number) {
+  const [a, m, d] = iso.split('-').map(Number) as [number, number, number]
+  const fin = new Date(Date.UTC(a, m - 1 + meses + 1, 0)).getUTCDate()
+  const f = new Date(Date.UTC(a, m - 1 + meses, Math.min(d, fin)))
+  return f.toISOString().slice(0, 10)
+}
+type EstadoPago = { tono: 'ok' | 'aviso' | 'mal' | 'nada'; texto: string }
+function estadoPago(e: Empresa): EstadoPago {
+  if (!e.pagado_hasta) return { tono: 'nada', texto: 'Sin pagos' }
+  const d = diasEntre(hoy, e.pagado_hasta)
+  if (d < 0) return { tono: 'mal', texto: `Vencido hace ${-d} ${-d === 1 ? 'día' : 'días'}` }
+  if (d <= 5) return { tono: 'aviso', texto: `Vence el ${fmtFecha(e.pagado_hasta, ZONA_POR_DEFECTO)}` }
+  return { tono: 'ok', texto: `Al día hasta ${fmtFecha(e.pagado_hasta, ZONA_POR_DEFECTO)}` }
+}
+const TONO_PAGO = { ok: 'bg-emerald-50 text-emerald-800', aviso: 'bg-amber-50 text-amber-800', mal: 'bg-rose-50 text-rose-800', nada: 'bg-slate-100 text-slate-600' }
+const ICONO_PAGO = { ok: CircleCheck, aviso: Clock, mal: CircleAlert, nada: CircleAlert }
+const resumenCobro = computed(() => {
+  const r = { al_dia: 0, vencidas: 0, sin_pagos: 0, mensual: 0 }
+  for (const e of empresas.value) {
+    const t = estadoPago(e).tono
+    if (t === 'mal') r.vencidas++
+    else if (t === 'nada') r.sin_pagos++
+    else r.al_dia++
+    r.mensual += Number(e.precio ?? 0)
+  }
+  return r
+})
+
+// Registrar pago
+const pagoAbierto = ref(false)
+const empresaPago = ref<Empresa | null>(null)
+const fp = reactive({ fecha: hoy, meses: 1, monto: null as number | null, medio: 'transferencia', notas: '' })
+const errorPago = ref('')
+const montoTocado = ref(false)
+function abrirPago(e: Empresa) {
+  empresaPago.value = e
+  Object.assign(fp, { fecha: hoy, meses: 1, monto: Number(e.precio), medio: e.ultimo_pago?.medio ?? 'transferencia', notas: '' })
+  montoTocado.value = false
+  errorPago.value = ''
+  pagoAbierto.value = true
+}
+function cambiarMeses() {
+  if (!montoTocado.value && empresaPago.value) fp.monto = Number(empresaPago.value.precio) * fp.meses
+}
+const cubreDesde = computed(() => {
+  const h = empresaPago.value?.pagado_hasta
+  return h && h >= fp.fecha ? h : fp.fecha
+})
+const cubreHasta = computed(() => (fp.fecha ? sumarMeses(cubreDesde.value, fp.meses) : ''))
+async function registrarPago() {
+  errorPago.value = ''
+  if (!fp.fecha) { errorPago.value = 'Indicá la fecha del pago.'; return }
+  if (!fp.monto || fp.monto <= 0) { errorPago.value = 'Ingresá el monto.'; return }
+  try {
+    await api.post(`/plataforma/empresas/${empresaPago.value!.id}/pagos`, { ...fp })
+    exito(`Pago registrado. ${empresaPago.value!.nombre} queda al día hasta el ${fmtFecha(cubreHasta.value, ZONA_POR_DEFECTO)}.`)
+    pagoAbierto.value = false
+    await cargar()
+    if (historialAbierto.value && empresaHist.value) void cargarHistorial()
+  } catch (e) { errorPago.value = traducirError(e) }
+}
+
+// Historial y precio
+const historialAbierto = ref(false)
+const empresaHist = ref<Empresa | null>(null)
+const pagos = ref<PagoSuscripcion[]>([])
+const precio = ref<number | null>(null)
+async function cargarHistorial() {
+  pagos.value = await api.get<PagoSuscripcion[]>(`/plataforma/empresas/${empresaHist.value!.id}/pagos`).catch(() => [])
+}
+function abrirHistorial(e: Empresa) {
+  empresaHist.value = e
+  precio.value = e.precio_especial !== null ? Number(e.precio_especial) : null
+  pagos.value = []
+  historialAbierto.value = true
+  void cargarHistorial()
+}
+async function guardarPrecio() {
+  try {
+    await api.put(`/plataforma/empresas/${empresaHist.value!.id}/precio`, { precio: precio.value })
+    exito(precio.value === null ? 'Vuelve a cobrarse según la tarifa.' : 'Precio especial guardado.')
+    await cargar()
+    empresaHist.value = empresas.value.find((x) => x.id === empresaHist.value!.id) ?? empresaHist.value
+  } catch (e) { notificarError(e) }
+}
+async function borrarPago(p: PagoSuscripcion) {
+  if (!(await confirmar({ titulo: 'Borrar pago', mensaje: `¿Borrar el pago de ${fmtMoneda(p.monto)} del ${fmtFecha(p.fecha, ZONA_POR_DEFECTO)}? Se recalcula hasta cuándo está pagada.`, confirmar: 'Borrar', peligro: true }))) return
+  try {
+    await api.delete(`/plataforma/pagos/${p.id}`)
+    await Promise.all([cargarHistorial(), cargar()])
+  } catch (e) { notificarError(e) }
+}
 const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspendida', baja_solicitada: 'Baja solicitada' }
 </script>
 
@@ -104,23 +208,39 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
         <button class="btn-fantasma ml-auto" aria-label="Actualizar" @click="cargar"><RefreshCw class="size-4" /></button>
         <button class="btn-primario" @click="abrir"><Plus class="size-4" /> Nueva empresa</button>
       </div>
+      <p v-if="empresas.length" class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+        <span>Ingreso mensual esperado: <strong class="tabular-nums text-slate-900">{{ fmtMoneda(resumenCobro.mensual) }}</strong></span>
+        <span class="text-emerald-700">{{ resumenCobro.al_dia }} al día</span>
+        <span :class="resumenCobro.vencidas ? 'font-semibold text-rose-700' : 'text-slate-500'">{{ resumenCobro.vencidas }} {{ resumenCobro.vencidas === 1 ? 'vencida' : 'vencidas' }}</span>
+        <span class="text-slate-500">{{ resumenCobro.sin_pagos }} sin pagos</span>
+      </p>
       <p v-if="error" class="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{{ error }}</p>
       <div class="tarjeta overflow-x-auto">
         <Cargando v-if="cargando && !empresas.length" />
         <EstadoVacio v-else-if="!visibles.length" :icono="Building2" titulo="No hay empresas" descripcion="Dá de alta la primera con «Nueva empresa»." />
         <table v-else class="tabla">
-          <thead class="bg-slate-50"><tr><th>Empresa</th><th>Dueño</th><th class="hidden md:table-cell">Alta</th><th class="hidden lg:table-cell">Último ingreso</th>
-            <th class="text-right">Usuarios</th><th class="text-right">Eventos</th><th class="hidden sm:table-cell">Estado</th></tr></thead>
+          <thead class="bg-slate-50"><tr><th>Empresa</th><th class="text-right">Precio / mes</th><th>Último pago</th><th>Pago</th>
+            <th class="hidden xl:table-cell">Último ingreso</th><th class="hidden text-right lg:table-cell">Eventos</th><th class="hidden 2xl:table-cell">Alta</th><th /></tr></thead>
           <tbody class="divide-y divide-slate-100">
             <tr v-for="e in visibles" :key="e.id">
-              <td><span class="font-medium">{{ e.nombre }}</span>
-                <a v-if="e.pagina" :href="`/s/${e.pagina}`" target="_blank" rel="noopener" class="block text-xs text-marca-700 hover:underline">/s/{{ e.pagina }}</a></td>
-              <td><span>{{ e.duenio?.nombre || '—' }}</span><span class="block text-xs text-slate-500">{{ e.duenio?.email }}</span></td>
-              <td class="hidden whitespace-nowrap md:table-cell">{{ fmtFecha(e.creado_at, ZONA_POR_DEFECTO) }}</td>
-              <td class="hidden whitespace-nowrap lg:table-cell">{{ e.duenio?.ultimo_ingreso ? fmtFechaHora(e.duenio.ultimo_ingreso, ZONA_POR_DEFECTO) : 'Nunca' }}</td>
-              <td class="text-right tabular-nums">{{ e.usuarios }}</td>
-              <td class="text-right tabular-nums">{{ e.eventos }}</td>
-              <td class="hidden sm:table-cell">{{ ESTADOS[e.estado] ?? e.estado }}</td>
+              <td class="min-w-48"><span class="font-medium">{{ e.nombre }}</span>
+                <span class="block text-xs text-slate-500">{{ e.duenio?.nombre || '—' }} · {{ e.duenio?.email }}</span>
+                <a v-if="e.pagina" :href="`/s/${e.pagina}`" target="_blank" rel="noopener" class="text-xs text-marca-700 hover:underline">/s/{{ e.pagina }}</a>
+                <span v-if="e.estado !== 'activa'" class="ml-1 text-xs text-rose-700">{{ ESTADOS[e.estado] ?? e.estado }}</span></td>
+              <td class="whitespace-nowrap text-right"><span class="tabular-nums">{{ fmtMoneda(e.precio, true) }}</span>
+                <span class="block text-xs text-slate-500">{{ e.precio_especial !== null ? 'precio especial' : `tarifa · ${Math.max(e.sedes, 1)} ${e.sedes > 1 ? 'sedes' : 'sede'}` }}</span></td>
+              <td class="whitespace-nowrap"><template v-if="e.ultimo_pago">{{ fmtFecha(e.ultimo_pago.fecha, ZONA_POR_DEFECTO) }}
+                <span class="block text-xs text-slate-500">{{ fmtMoneda(e.ultimo_pago.monto, true) }} · {{ MEDIOS_PAGO[e.ultimo_pago.medio] ?? e.ultimo_pago.medio }}{{ e.ultimo_pago.meses > 1 ? ` · ${e.ultimo_pago.meses} meses` : '' }}</span></template>
+                <span v-else class="text-slate-400">—</span></td>
+              <td class="whitespace-nowrap"><span :class="['inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium', TONO_PAGO[estadoPago(e).tono]]">
+                <component :is="ICONO_PAGO[estadoPago(e).tono]" class="size-3.5" aria-hidden="true" />{{ estadoPago(e).texto }}</span></td>
+              <td class="hidden whitespace-nowrap xl:table-cell">{{ e.duenio?.ultimo_ingreso ? fmtFechaHora(e.duenio.ultimo_ingreso, ZONA_POR_DEFECTO) : 'Nunca' }}</td>
+              <td class="hidden text-right tabular-nums lg:table-cell">{{ e.eventos }}</td>
+              <td class="hidden whitespace-nowrap 2xl:table-cell">{{ fmtFecha(e.creado_at, ZONA_POR_DEFECTO) }}</td>
+              <td class="whitespace-nowrap text-right">
+                <button class="btn-secundario btn-chico" @click="abrirPago(e)"><Wallet class="size-4" /> Registrar pago</button>
+                <button class="btn-fantasma btn-chico" :aria-label="`Pagos y precio de ${e.nombre}`" @click="abrirHistorial(e)"><History class="size-4" /> Pagos</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -155,6 +275,54 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
           <button class="btn-primario" @click="abierto = false">Listo</button>
         </template>
       </template>
+    </Modal>
+
+    <Modal v-model="pagoAbierto" titulo="Registrar pago" ancho="sm" :descripcion="empresaPago ? `${empresaPago.nombre} · ${fmtMoneda(empresaPago.precio, true)} por mes` : ''">
+      <form id="form-pago-susc" class="space-y-3" @submit.prevent="registrarPago">
+        <div class="grid grid-cols-2 gap-3">
+          <Campo etiqueta="Fecha del pago" para="ps-fecha"><CampoFecha id="ps-fecha" v-model="fp.fecha" /></Campo>
+          <Campo etiqueta="Meses que paga" para="ps-meses"><select id="ps-meses" v-model.number="fp.meses" class="entrada" @change="cambiarMeses">
+            <option v-for="m in [1, 2, 3, 4, 6, 12]" :key="m" :value="m">{{ m }} {{ m === 1 ? 'mes' : 'meses' }}</option></select></Campo>
+        </div>
+        <Campo etiqueta="Monto" para="ps-monto"><CampoMoneda id="ps-monto" v-model="fp.monto" @update:model-value="montoTocado = true" /></Campo>
+        <Campo etiqueta="Medio" para="ps-medio"><select id="ps-medio" v-model="fp.medio" class="entrada">
+          <option v-for="(m, k) in MEDIOS_PAGO" :key="k" :value="k">{{ m }}</option></select></Campo>
+        <Campo etiqueta="Nota (opcional)" para="ps-notas"><input id="ps-notas" v-model="fp.notas" class="entrada" placeholder="N° de operación, factura…" /></Campo>
+        <p v-if="cubreHasta" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+          Cubre del {{ fmtFecha(cubreDesde, ZONA_POR_DEFECTO) }} al {{ fmtFecha(cubreHasta, ZONA_POR_DEFECTO) }}.</p>
+        <p v-if="errorPago" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ errorPago }}</p>
+      </form>
+      <template #pie>
+        <button class="btn-secundario" @click="pagoAbierto = false">Cancelar</button>
+        <button type="submit" form="form-pago-susc" class="btn-primario">Registrar pago</button>
+      </template>
+    </Modal>
+
+    <Modal v-model="historialAbierto" :titulo="empresaHist ? `Pagos de ${empresaHist.nombre}` : 'Pagos'" ancho="lg">
+      <div class="space-y-4">
+        <form class="flex flex-wrap items-end gap-2" @submit.prevent="guardarPrecio">
+          <Campo etiqueta="Precio especial por mes" para="ps-precio" class="w-56"
+                 :ayuda="empresaHist ? `Vacío = tarifa: ${fmtMoneda(empresaHist.precio_tarifa, true)} (${Math.max(empresaHist.sedes, 1)} ${empresaHist.sedes > 1 ? 'sedes' : 'sede'})` : ''">
+            <CampoMoneda id="ps-precio" v-model="precio" /></Campo>
+          <button class="btn-secundario">Guardar</button>
+          <button type="button" class="btn-primario ml-auto" @click="empresaHist && abrirPago(empresaHist)"><Wallet class="size-4" /> Registrar pago</button>
+        </form>
+        <p v-if="!pagos.length" class="py-4 text-center text-sm text-slate-500">Todavía no hay pagos registrados.</p>
+        <table v-else class="tabla text-sm">
+          <thead class="bg-slate-50"><tr><th>Fecha</th><th class="text-right">Monto</th><th>Cubre</th><th class="hidden sm:table-cell">Medio</th><th /></tr></thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr v-for="p in pagos" :key="p.id">
+              <td class="whitespace-nowrap">{{ fmtFecha(p.fecha, ZONA_POR_DEFECTO) }}<span v-if="p.notas" class="block text-xs text-slate-500">{{ p.notas }}</span></td>
+              <td class="text-right tabular-nums">{{ fmtMoneda(p.monto, true) }}</td>
+              <td class="whitespace-nowrap">{{ fmtFecha(p.cubre_desde, ZONA_POR_DEFECTO) }} al {{ fmtFecha(p.cubre_hasta, ZONA_POR_DEFECTO) }}
+                <span class="block text-xs text-slate-500">{{ p.meses }} {{ p.meses === 1 ? 'mes' : 'meses' }}</span></td>
+              <td class="hidden sm:table-cell">{{ MEDIOS_PAGO[p.medio] ?? p.medio }}</td>
+              <td class="text-right"><button class="btn-fantasma p-1.5 text-rose-600" :aria-label="`Borrar pago del ${fmtFecha(p.fecha, ZONA_POR_DEFECTO)}`" @click="borrarPago(p)"><Trash2 class="size-4" /></button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <template #pie><button class="btn-primario" @click="historialAbierto = false">Listo</button></template>
     </Modal>
   </div>
 </template>
