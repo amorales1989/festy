@@ -37,7 +37,7 @@ Requisitos: Node 22+, pnpm, Docker y Supabase CLI.
 pnpm install
 (cd ../Festy-back && npm install && supabase start)   # Auth 64321 · DB 64322 · Studio 64323 · Mailpit 64324
 pnpm api                       # API de Festy en http://localhost:4000 (en otra terminal)
-cp .env.example .env.local     # VITE_SUPABASE_ANON_KEY = clave publishable de `supabase status`; VITE_API_URL ya apunta a la API local
+cp .env.example .env.local     # VITE_AUTH_KEY = clave publishable de `supabase status`; VITE_API_URL ya apunta a la API local
 pnpm dev                       # http://localhost:5173
 ```
 Los puertos 643xx evitan conflictos con otros proyectos Supabase locales. Crear una cuenta en `/registro` lleva al onboarding.
