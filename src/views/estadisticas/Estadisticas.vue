@@ -51,6 +51,10 @@ const PERIODOS = {
 type ClavePeriodo = keyof typeof PERIODOS | 'personalizado'
 const periodo = ref<ClavePeriodo>('mes')
 const rango = reactive({ desde: PERIODOS.mes.desde, hasta: PERIODOS.mes.hasta })
+// Salón: por defecto todos; el selector aparece solo si la empresa tiene más de uno.
+const salon = ref('')
+const salones = computed(() => org.sucursalesActivas)
+const nombreSalon = computed(() => salones.value.find((s) => s.id === salon.value)?.nombre ?? '')
 watch(periodo, (p) => { if (p !== 'personalizado') Object.assign(rango, { desde: PERIODOS[p].desde, hasta: PERIODOS[p].hasta }) })
 
 const datos = ref<Datos | null>(null)
@@ -61,14 +65,14 @@ async function cargar() {
   cargando.value = true
   error.value = ''
   try {
-    datos.value = await api.get<Datos>(rutaOrg(org.id, 'estadisticas'), { desde: rango.desde, hasta: rango.hasta })
+    datos.value = await api.get<Datos>(rutaOrg(org.id, 'estadisticas'), { desde: rango.desde, hasta: rango.hasta, sucursal: salon.value || undefined })
   } catch (e) {
     error.value = traducirError(e)
   } finally {
     cargando.value = false
   }
 }
-watch(() => ({ ...rango }), cargar)
+watch(() => ({ ...rango, salon: salon.value }), cargar)
 onMounted(cargar)
 
 // --- Formatos -------------------------------------------------------------------------
@@ -217,7 +221,7 @@ async function exportar() {
   const filasA = (f: FilaBarra[], formato: (v: number) => string) => f.map((x) => ({ etiqueta: x.etiqueta, valor: formato(x.valor), detalle: x.detalle ?? '' }))
   const col = (titulo: string) => [{ clave: 'etiqueta', titulo }, { clave: 'valor', titulo: 'Valor', alinear: 'right' as const }, { clave: 'detalle', titulo: 'Detalle' }]
   await exportarPDF(nombreArchivo('estadisticas', org.actual?.nombre ?? '', hoy), {
-    titulo: 'Estadísticas', subtitulo: `Del ${fmtFecha(d.periodo.desde, z)} al ${fmtFecha(d.periodo.hasta, z)} · comparado con ${textoAnterior.value}`,
+    titulo: 'Estadísticas', subtitulo: `${nombreSalon.value ? `${nombreSalon.value} · ` : ''}Del ${fmtFecha(d.periodo.desde, z)} al ${fmtFecha(d.periodo.hasta, z)} · comparado con ${textoAnterior.value}`,
     organizacion: org.actual?.nombre ?? '', zona: z,
     secciones: [
       { titulo: 'Resumen', columnas: [{ clave: 'titulo', titulo: 'Indicador' }, { clave: 'valor', titulo: 'Valor', alinear: 'right' }, { clave: 'detalle', titulo: 'Detalle' }, { clave: 'variacion', titulo: 'Variación' }],
@@ -246,13 +250,17 @@ async function exportar() {
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <h1 class="titulo-pagina">Estadísticas</h1>
-        <p v-if="datos" class="text-sm text-slate-500">Del {{ fmtFecha(datos.periodo.desde, org.zona) }} al {{ fmtFecha(datos.periodo.hasta, org.zona) }} · comparado con {{ textoAnterior }}</p>
+        <p v-if="datos" class="text-sm text-slate-500"><template v-if="nombreSalon">{{ nombreSalon }} · </template>Del {{ fmtFecha(datos.periodo.desde, org.zona) }} al {{ fmtFecha(datos.periodo.hasta, org.zona) }} · comparado con {{ textoAnterior }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <template v-if="periodo === 'personalizado'">
           <div class="w-36"><CampoFecha v-model="rango.desde" /></div>
           <div class="w-36"><CampoFecha v-model="rango.hasta" /></div>
         </template>
+        <select v-if="salones.length > 1" v-model="salon" class="entrada w-auto" aria-label="Salón">
+          <option value="">Todos los salones</option>
+          <option v-for="s in salones" :key="s.id" :value="s.id">{{ s.nombre }}</option>
+        </select>
         <select v-model="periodo" class="entrada w-auto" aria-label="Período">
           <option v-for="(p, k) in PERIODOS" :key="k" :value="k">{{ p.etiqueta }}</option>
           <option value="personalizado">Personalizado…</option>
