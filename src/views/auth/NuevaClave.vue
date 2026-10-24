@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import LayoutAuth from '@/layouts/LayoutAuth.vue'
 import Campo from '@/components/ui/Campo.vue'
 import { supabase } from '@/lib/supabase'
@@ -9,6 +9,21 @@ import { useSesion } from '@/stores/sesion'
 import { useNotificaciones } from '@/composables/useNotificaciones'
 
 const router = useRouter()
+const route = useRoute()
+const validando = ref(false)
+
+// El enlace del mail trae un código de un solo uso (token_hash): se valida acá, así
+// funciona aunque el mail se abra en otro dispositivo que donde se pidió.
+onMounted(async () => {
+  const tokenHash = typeof route.query.token_hash === 'string' ? route.query.token_hash : ''
+  if (!tokenHash) return
+  validando.value = true
+  const { error: e } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
+  validando.value = false
+  if (e) error.value = 'El enlace no es válido o ya venció. Pedí uno nuevo.'
+  else await sesion.cargarPerfil()
+  await router.replace({ query: {} })
+})
 const sesion = useSesion()
 const clave = ref('')
 const repetir = ref('')
@@ -34,7 +49,8 @@ async function guardar() {
 
 <template>
   <LayoutAuth titulo="Elegí una nueva contraseña">
-    <p v-if="!sesion.autenticado" class="text-sm text-slate-600">
+    <p v-if="validando" class="text-sm text-slate-500">Validando el enlace…</p>
+    <p v-else-if="!sesion.autenticado" class="text-sm text-slate-600">
       El enlace no es válido o ya venció. <RouterLink to="/recuperar" class="enlace">Pedí uno nuevo</RouterLink>.
     </p>
     <p v-else-if="esDemo" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
