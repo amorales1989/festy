@@ -21,6 +21,7 @@ const AUTH: Array<[RegExp, string]> = [
   [/unable to validate email|invalid email/i, 'El email no es válido.'],
   [/jwt expired|session.*(missing|expired)/i, 'Tu sesión venció. Volvé a ingresar.'],
   [/signups not allowed/i, 'El registro de nuevas cuentas está deshabilitado.'],
+  [/error during password storage|error sending email change/i, 'No se pudo hacer el cambio. Si es la cuenta de demostración, la contraseña y el email no se pueden modificar.'],
 ]
 
 function esEspanol(texto: string): boolean {

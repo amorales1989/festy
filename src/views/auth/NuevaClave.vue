@@ -15,6 +15,8 @@ const repetir = ref('')
 const error = ref('')
 const ocupado = ref(false)
 const valido = computed(() => clave.value.length >= 8 && clave.value === repetir.value)
+// Cuenta de demostración compartida: la base no deja cambiarle la contraseña (migración 13).
+const esDemo = computed(() => sesion.usuario?.app_metadata?.demo === true)
 
 async function guardar() {
   error.value = ''
@@ -34,6 +36,9 @@ async function guardar() {
   <LayoutAuth titulo="Elegí una nueva contraseña">
     <p v-if="!sesion.autenticado" class="text-sm text-slate-600">
       El enlace no es válido o ya venció. <RouterLink to="/recuperar" class="enlace">Pedí uno nuevo</RouterLink>.
+    </p>
+    <p v-else-if="esDemo" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+      Esta es la cuenta de demostración: su contraseña no se puede cambiar. <RouterLink to="/" class="enlace">Volver al inicio</RouterLink>
     </p>
     <form v-else class="space-y-4" @submit.prevent="guardar">
       <Campo etiqueta="Nueva contraseña" para="clave" ayuda="Mínimo 8 caracteres.">
