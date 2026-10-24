@@ -92,6 +92,7 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
           <p class="text-xs text-slate-500">Alta de empresas cliente · {{ sesion.usuario?.email }}</p>
         </div>
         <RouterLink v-if="org.actual" to="/" class="btn-secundario"><ArrowLeft class="size-4" /> Volver a la app</RouterLink>
+        <RouterLink to="/nueva-clave" class="btn-fantasma"><KeyRound class="size-4" /> Cambiar contraseña</RouterLink>
         <button class="btn-fantasma" @click="sesion.salir().then(() => $router.replace('/ingresar'))"><LogOut class="size-4" /> Salir</button>
       </div>
     </header>

@@ -49,7 +49,7 @@ async function guardar() {
       </Campo>
       <p v-if="error" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ error }}</p>
       <button class="btn-primario w-full" :disabled="ocupado || !valido">Guardar contraseña</button>
-      <RouterLink to="/" class="enlace block text-center text-sm">Cancelar</RouterLink>
+      <button type="button" class="enlace block w-full text-center text-sm" @click="router.back()">Cancelar</button>
     </form>
   </LayoutAuth>
 </template>
