@@ -213,8 +213,7 @@ async function cancelarBaja() {
     <!-- Importar -->
     <section class="tarjeta p-5 lg:col-span-2">
       <h2 class="flex items-center gap-2 font-semibold"><Upload class="size-4 text-marca-600" /> Importar desde planilla (CSV)</h2>
-      <p v-if="!org.tieneFuncion('importacion')" class="mt-2 text-sm text-slate-600">La importación está incluida en los planes Profesional y Empresa. <RouterLink to="/configuracion/plan" class="enlace">Ver planes</RouterLink></p>
-      <p v-else-if="!org.puede('datos.importar')" class="mt-2 text-sm text-slate-600">Tu rol no permite importar datos.</p>
+      <p v-if="!org.puede('datos.importar')" class="mt-2 text-sm text-slate-600">Tu rol no permite importar datos.</p>
       <div v-else class="mt-3 space-y-3">
         <p class="text-sm text-slate-600">Exportá tu planilla de Excel o Google Sheets como CSV. La primera fila debe tener los nombres de columna.
           Las fechas van en formato DD/MM/AAAA y los montos como “1.500.000,50”. Las reservas que choquen con otra se informan y no se cargan.</p>

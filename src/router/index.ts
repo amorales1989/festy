@@ -49,7 +49,6 @@ const rutas: RouteRecordRaw[] = [
           { path: 'feriados', name: 'config-feriados', component: () => import('@/views/configuracion/Feriados.vue'), meta: { titulo: 'Feriados' } },
           { path: 'usuarios', name: 'config-usuarios', component: () => import('@/views/configuracion/Usuarios.vue'), meta: { permiso: 'usuarios.gestionar', titulo: 'Usuarios' } },
           { path: 'roles', name: 'config-roles', component: () => import('@/views/configuracion/Roles.vue'), meta: { titulo: 'Roles y permisos' } },
-          { path: 'plan', name: 'config-plan', component: () => import('@/views/configuracion/Plan.vue'), meta: { titulo: 'Plan' } },
           { path: 'auditoria', name: 'config-auditoria', component: () => import('@/views/configuracion/Auditoria.vue'), meta: { permiso: 'auditoria.ver', titulo: 'Auditoría' } },
           { path: 'datos', name: 'config-datos', component: () => import('@/views/configuracion/Datos.vue'), meta: { titulo: 'Datos y cuenta' } },
         ],

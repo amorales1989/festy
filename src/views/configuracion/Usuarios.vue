@@ -5,7 +5,7 @@ import Modal from '@/components/ui/Modal.vue'
 import Campo from '@/components/ui/Campo.vue'
 import type { Fila } from '@/lib/supabase'
 import { api, rutaOrg } from '@/lib/api'
-import { esLimitePlan, traducirError } from '@/lib/errores'
+import { traducirError } from '@/lib/errores'
 import { fmtFecha } from '@/lib/formato'
 import { useOrganizacion } from '@/stores/organizacion'
 import { useSesion } from '@/stores/sesion'
@@ -55,7 +55,6 @@ async function alternarActivo(m: Miembro) {
 const invitarAbierto = ref(false)
 const inv = reactive({ email: '', rol_id: '' })
 const errorInv = ref('')
-const limite = ref(false)
 const enlaceGenerado = ref('')
 function abrirInvitar() {
   Object.assign(inv, { email: '', rol_id: roles.value.find((r) => r.clave === 'recepcion')?.id ?? roles.value[0]?.id ?? '' })
@@ -66,7 +65,6 @@ function abrirInvitar() {
 const enlace = (token: string) => `${location.origin}/invitacion/${token}`
 async function invitar() {
   errorInv.value = ''
-  limite.value = false
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(inv.email.trim())) { errorInv.value = 'Ingresá un email válido.'; return }
   try {
     const r = await api.post<{ token: string }>(rutaOrg(org.id, 'invitaciones'), { email: inv.email.trim().toLowerCase(), rol_id: inv.rol_id })
@@ -74,7 +72,6 @@ async function invitar() {
     void cargar()
   } catch (e) {
     errorInv.value = (e as { code?: string }).code === '23505' ? 'Ya hay una invitación pendiente para ese email.' : traducirError(e)
-    limite.value = esLimitePlan(e)
   }
 }
 async function copiar(texto: string) {
@@ -96,7 +93,7 @@ async function revocar(i: Fila<'invitaciones'>) {
 <template>
   <div class="space-y-4">
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <p class="text-sm text-slate-600">Usuarios con acceso a {{ org.actual?.nombre }}<template v-if="org.plan?.max_usuarios"> · tu plan permite {{ org.plan.max_usuarios }}</template>.</p>
+      <p class="text-sm text-slate-600">Usuarios con acceso a {{ org.actual?.nombre }}.</p>
       <button class="btn-primario" @click="abrirInvitar"><MailPlus class="size-4" /> Invitar usuario</button>
     </div>
     <div class="tarjeta overflow-x-auto">
@@ -145,8 +142,7 @@ async function revocar(i: Fila<'invitaciones'>) {
         <Campo etiqueta="Rol" para="i-rol" :ayuda="roles.find((r) => r.id === inv.rol_id)?.descripcion ?? undefined">
           <select id="i-rol" v-model="inv.rol_id" class="entrada"><option v-for="r in roles" :key="r.id" :value="r.id">{{ r.nombre }}</option></select>
         </Campo>
-        <p v-if="errorInv" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ errorInv }}
-          <RouterLink v-if="limite" to="/configuracion/plan" class="enlace">Ver planes</RouterLink></p>
+        <p v-if="errorInv" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ errorInv }}</p>
       </form>
       <template #pie>
         <button class="btn-secundario" @click="invitarAbierto = false">{{ enlaceGenerado ? 'Cerrar' : 'Cancelar' }}</button>

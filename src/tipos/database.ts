@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       auditoria: {
@@ -1992,10 +1967,6 @@ export type Database = {
       }
       borrar_datos_ejemplo: { Args: { p_org: string }; Returns: undefined }
       buscar_global: { Args: { p_org: string; p_q: string }; Returns: Json }
-      cambiar_plan: {
-        Args: { p_org: string; p_plan: string }
-        Returns: undefined
-      }
       cancelar_baja_organizacion: {
         Args: { p_org: string }
         Returns: undefined
@@ -2313,9 +2284,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       estado_contrato: ["no_requerido", "pendiente", "enviado", "firmado"],

@@ -49,7 +49,7 @@ async function registrar() {
 </script>
 
 <template>
-  <LayoutAuth titulo="Creá tu cuenta" subtitulo="14 días de prueba del plan Profesional. Sin tarjeta.">
+  <LayoutAuth titulo="Creá tu cuenta" subtitulo="Gestioná tu salón de eventos en un solo lugar.">
     <div v-if="pendienteConfirmacion" class="space-y-3 text-sm text-slate-600" role="status">
       <p>Te enviamos un email a <strong>{{ email }}</strong> para confirmar tu cuenta.</p>
       <p>Abrí el enlace del mensaje para continuar. Si no lo ves, revisá la carpeta de spam.</p>

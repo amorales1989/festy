@@ -11,7 +11,6 @@ const secciones = computed(() => [
   { nombre: 'config-feriados', etiqueta: 'Feriados', visible: true },
   { nombre: 'config-usuarios', etiqueta: 'Usuarios', visible: org.puede('usuarios.gestionar') },
   { nombre: 'config-roles', etiqueta: 'Roles y permisos', visible: true },
-  { nombre: 'config-plan', etiqueta: 'Plan', visible: true },
   { nombre: 'config-auditoria', etiqueta: 'Auditoría', visible: org.puede('auditoria.ver') },
   { nombre: 'config-datos', etiqueta: 'Datos y cuenta', visible: true },
 ].filter((s) => s.visible))

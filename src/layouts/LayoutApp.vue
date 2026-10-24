@@ -43,12 +43,6 @@ function activo(a: string) {
 }
 watch(() => route.fullPath, () => { menuMovil.value = false })
 
-const diasPrueba = computed(() => {
-  const hasta = org.actual?.prueba_hasta
-  if (org.actual?.suscripcion_estado !== 'prueba' || !hasta) return null
-  return Math.max(0, Math.floor((new Date(`${hasta}T23:59:59`).getTime() - Date.now()) / 864e5))
-})
-
 async function cambiarOrganizacion(id: string) {
   selectorAbierto.value = false
   await org.seleccionar(id)
@@ -138,10 +132,6 @@ async function salir() {
         Solicitaste la baja de la cuenta. Los datos se eliminarán definitivamente 30 días después de
         {{ fmtFecha(org.actual.baja_solicitada_at, org.zona) }}.
         <RouterLink to="/configuracion/datos" class="font-semibold underline">Cancelar la baja</RouterLink>
-      </div>
-      <div v-else-if="diasPrueba !== null" class="bg-marca-50 px-4 py-1.5 text-center text-xs text-marca-800">
-        Período de prueba: {{ diasPrueba === 0 ? 'último día' : `quedan ${diasPrueba} días` }} ·
-        <RouterLink to="/configuracion/plan" class="font-semibold underline">Ver planes</RouterLink>
       </div>
 
       <main class="mx-auto max-w-7xl px-4 pt-6 pb-[calc(7rem+var(--ins-bottom))] sm:px-6 lg:px-8 lg:pb-8">

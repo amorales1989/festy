@@ -84,19 +84,9 @@ Reglas de campo aplicadas por triggers: quien solo puede cancelar o gestionar co
 
 ## 4. Funcionalidades por plan
 
-| | Inicial | Profesional | Empresa |
-|---|:-:|:-:|:-:|
-| Sedes | 1 | 3 | Ilimitadas |
-| Espacios | 3 | 15 | Ilimitados |
-| Usuarios activos | 3 | 15 | Ilimitados |
-| Calendario, reservas, clientes, cobros, tareas, panel | ✔ | ✔ | ✔ |
-| Gastos | | ✔ | ✔ |
-| Importación (CSV) / exportación en PDF | | ✔ | ✔ |
-| Auditoría | | ✔ | ✔ |
-| Varios salones (marcas) | | ✔ | ✔ |
-| Roles personalizados | | | ✔ |
+**Plan único.** Festy se vende con un solo plan y se cobra por fuera de la app. Toda organización tiene todas las funciones (calendario, reservas, clientes, cobros, tareas, panel, gastos, importación, exportación, auditoría, varios salones y roles personalizados) y no hay límites de sedes, espacios ni usuarios. No hay período de prueba ni pantalla de planes.
 
-Las cuentas nuevas empiezan con 14 días de prueba del plan Profesional. Los límites se aplican en la base (triggers) y al bajar de plan se verifica que la cuenta esté dentro de los nuevos límites. **Precios: a definir** (en 0 en la tabla `planes`).
+La estructura de planes de la base se conserva con un único plan activo (`festy`, migración 12), por si en el futuro se reabren planes con límites: los triggers de límites siguen existiendo y no se disparan porque el plan no tiene límites.
 
 ## 5. Plan por fases
 
@@ -110,7 +100,7 @@ Las cuentas nuevas empiezan con 14 días de prueba del plan Profesional. Los lí
 | 4. Cobranza online | Mercado Pago (links de pago, webhooks), facturación electrónica AFIP/ARCA | Pendiente |
 | 5. Comunicación | Emails transaccionales (invitaciones, recordatorios), WhatsApp | Pendiente |
 | 6. Operación avanzada | Reserva de recursos con stock por fecha, presupuestos y catálogo de servicios, permisos por sede | Pendiente |
-| 7. Facturación SaaS | Suscripciones, cobro del plan, bloqueo por falta de pago | Pendiente |
+| 7. Facturación SaaS | El cobro se hace por fuera de la app (plan único). Pendiente si se necesita: suspender cuentas que no pagan | Fuera de la app |
 
 ## 6. Riesgos
 
@@ -122,7 +112,7 @@ Las cuentas nuevas empiezan con 14 días de prueba del plan Profesional. Los lí
 | Feriados trasladables mal cargados | Bajo | Solo se precargan los inamovibles de 2026; el resto lo carga cada organización. Pendiente: actualizar anualmente según decreto. |
 | Invitaciones sin email automático | Medio | Hoy se comparte el enlace. Pendiente: SMTP propio en Supabase (ver PENDIENTES). |
 | Rendimiento del panel con muchos datos | Medio | Índices por organización y fecha; `panel_resumen` limita el período a 1 año. Pendiente: pruebas de carga. |
-| Cambio de plan sin cobro | Comercial | Documentado y visible en la pantalla de Plan; requiere integrar la facturación antes de vender. |
+| Cobro fuera de la app | Comercial | Si un cliente deja de pagar, hoy no hay una forma de suspender su cuenta desde la app (ver PENDIENTES). |
 | Copias de seguridad | Alto | Dependen de la infraestructura (Supabase Pro: backups diarios + PITR). Informe PDF completo por organización disponible (no reemplaza un backup: no sirve para reimportar). |
 | Purga irreversible de cuentas | Alto | 30 días de gracia, confirmación escribiendo el nombre, aviso permanente en la interfaz. |
 

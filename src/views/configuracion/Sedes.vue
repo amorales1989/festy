@@ -11,7 +11,7 @@ import EstadoVacio from '@/components/ui/EstadoVacio.vue'
 import type { Fila } from '@/lib/supabase'
 import { activar, api, eliminar as eliminarRegistro, rutaOrg } from '@/lib/api'
 import { fmtMoneda } from '@/lib/formato'
-import { esLimitePlan, traducirError } from '@/lib/errores'
+import { traducirError } from '@/lib/errores'
 import { CATEGORIAS_RECURSO, DIAS_SEMANA, TIPOS_ESPACIO } from '@/lib/catalogos'
 import { useOrganizacion, type Espacio, type Salon, type Sucursal } from '@/stores/organizacion'
 import { useConfirmar } from '@/composables/useConfirmar'
@@ -22,12 +22,10 @@ const { confirmar } = useConfirmar()
 const { exito, error: notificarError } = useNotificaciones()
 const puede = computed(() => org.puede('sedes.gestionar'))
 const errorForm = ref('')
-const limitePlan = ref(false)
 const guardando = ref(false)
 
 async function ejecutar(fn: () => Promise<void>, mensaje: string, cerrar: () => void) {
   errorForm.value = ''
-  limitePlan.value = false
   guardando.value = true
   try {
     await fn()
@@ -36,7 +34,6 @@ async function ejecutar(fn: () => Promise<void>, mensaje: string, cerrar: () => 
     cerrar()
   } catch (e) {
     errorForm.value = traducirError(e)
-    limitePlan.value = esLimitePlan(e)
   } finally {
     guardando.value = false
   }
@@ -252,8 +249,7 @@ const fmtMin = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${
       <form id="f-salon" class="space-y-3" @submit.prevent="guardarSalon">
         <Campo etiqueta="Nombre" para="s-nombre" requerido><input id="s-nombre" v-model="fSalon.nombre" class="entrada" /></Campo>
         <Campo etiqueta="Descripción" para="s-desc"><textarea id="s-desc" v-model="fSalon.descripcion" rows="2" class="entrada" /></Campo>
-        <p v-if="errorForm" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ errorForm }}
-          <RouterLink v-if="limitePlan" to="/configuracion/plan" class="enlace">Ver planes</RouterLink></p>
+        <p v-if="errorForm" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ errorForm }}</p>
       </form>
       <template #pie><button class="btn-secundario" @click="salonAbierto = false">Cancelar</button>
         <button type="submit" form="f-salon" class="btn-primario" :disabled="guardando">Guardar</button></template>
@@ -268,8 +264,7 @@ const fmtMin = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${
         <Campo etiqueta="Localidad" para="su-loc"><input id="su-loc" v-model="fSuc.localidad" class="entrada" /></Campo>
         <Campo etiqueta="Provincia" para="su-prov"><input id="su-prov" v-model="fSuc.provincia" class="entrada" /></Campo>
         <Campo etiqueta="Teléfono" para="su-tel"><input id="su-tel" v-model="fSuc.telefono" type="tel" class="entrada" /></Campo>
-        <p v-if="errorForm" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 sm:col-span-2" role="alert">{{ errorForm }}
-          <RouterLink v-if="limitePlan" to="/configuracion/plan" class="enlace">Ver planes</RouterLink></p>
+        <p v-if="errorForm" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 sm:col-span-2" role="alert">{{ errorForm }}</p>
       </form>
       <template #pie><button class="btn-secundario" @click="sucAbierta = false">Cancelar</button>
         <button type="submit" form="f-suc" class="btn-primario" :disabled="guardando">Guardar</button></template>
@@ -309,8 +304,7 @@ const fmtMin = (m: number) => (m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${
           </ul>
           <p class="mt-1 text-xs text-slate-500">Sin días marcados = sin restricción horaria.</p>
         </fieldset>
-        <p v-if="errorForm" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ errorForm }}
-          <RouterLink v-if="limitePlan" to="/configuracion/plan" class="enlace">Ver planes</RouterLink></p>
+        <p v-if="errorForm" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ errorForm }}</p>
       </form>
       <template #pie><button class="btn-secundario" @click="espAbierto = false">Cancelar</button>
         <button type="submit" form="f-esp" class="btn-primario" :disabled="guardando">{{ guardando ? 'Guardando…' : 'Guardar' }}</button></template>
