@@ -44,7 +44,8 @@ void props
 </script>
 
 <template>
-  <div class="relative">
+  <div>
+    <div class="relative">
     <input :id="id" :value="texto" type="text" inputmode="numeric" placeholder="DD/MM/AAAA" autocomplete="off"
            :required="requerido" :disabled="deshabilitado" :class="['entrada pr-10', invalida && 'entrada-error']"
            :aria-invalid="invalida" @input="alEscribir" @blur="alSalir" />
@@ -52,8 +53,10 @@ void props
             :disabled="deshabilitado" aria-label="Elegir fecha en el calendario" tabindex="-1" @click="abrirSelector">
       <CalendarDays class="size-4" />
     </button>
-    <input ref="nativo" type="date" class="pointer-events-none absolute bottom-0 right-0 size-0 opacity-0" tabindex="-1"
+    <!-- Ocupa todo el campo (invisible) para que el navegador ancle el calendario debajo del input. -->
+    <input ref="nativo" type="date" class="pointer-events-none absolute inset-0 -z-10 size-full opacity-0" tabindex="-1"
            aria-hidden="true" :value="modelo" :min="min" @change="alElegir" />
+    </div>
     <p v-if="invalida" class="mt-1 text-xs text-rose-600">Fecha inválida. Usá el formato DD/MM/AAAA.</p>
   </div>
 </template>
