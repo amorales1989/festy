@@ -127,7 +127,7 @@ Cómo se aplicó:
 | Antes | Ahora |
 |---|---|
 | Panel con 10 indicadores y filtros siempre visibles | Inicio con saludo, **HOY**, 4 números y una lista **Para hacer** con acciones concretas (“Pedir la seña…”, “Cobrar $X atrasados”); filtros plegados |
-| 8 secciones en el menú, con jerga (“Reservas”, “Calendario”, “Configuración”) | Inicio · Agenda · Eventos · Clientes · Plata (cobros + gastos) · Tareas · Ajustes; barra inferior con botón “+” en el celular |
+| 8 secciones en el menú, con jerga (“Reservas”, “Calendario”, “Configuración”) | Inicio · Agenda · Eventos · Clientes · Finanzas (cobros, caja, gastos, proveedores) · Tareas · Ajustes; barra inferior con botón “+” en el celular |
 | 6 estados técnicos (“Tentativa”, “Finalizada”) | Lenguaje simple: Consulta · Fecha retenida · Señada · Confirmada · Realizado · Cancelado, con explicación en una línea |
 | Formulario de reserva con ~15 campos en dos columnas | Tres pasos (*¿Para quién? ¿Cuándo y dónde? ¿Qué evento?*), estado con 3 botones grandes, el resto en “Más opciones”; el nombre del evento se completa solo |
 | Ficha del evento sin guía | Aviso **Próximo paso** con el botón para resolverlo (seña, contrato, saldo, confirmar) |

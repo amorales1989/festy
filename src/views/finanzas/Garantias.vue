@@ -2,7 +2,7 @@
 // Depósitos de garantía: plata de los clientes en custodia. No es ingreso del salón.
 import { computed, onMounted, ref } from 'vue'
 import { Download, ShieldCheck } from 'lucide-vue-next'
-import PestanasPlata from '@/components/finanzas/PestanasPlata.vue'
+import PestanasFinanzas from '@/components/finanzas/PestanasFinanzas.vue'
 import EstadoVacio from '@/components/ui/EstadoVacio.vue'
 import Cargando from '@/components/ui/Cargando.vue'
 import { api, rutaOrg } from '@/lib/api'
@@ -58,7 +58,7 @@ async function exportar() {
 
 <template>
   <div class="space-y-4">
-    <PestanasPlata />
+    <PestanasFinanzas />
     <p class="text-sm text-slate-600">Los depósitos de garantía son plata del cliente en custodia: no se cuentan como ingresos. Se devuelven después del evento, completos o con una retención por daños.</p>
     <div class="grid gap-3 sm:grid-cols-3">
       <div class="tarjeta p-4"><p class="text-xs text-slate-500">En custodia</p><p class="text-xl font-semibold tabular-nums">{{ fmtMoneda(enCustodia, true) }}</p></div>

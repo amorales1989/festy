@@ -219,7 +219,7 @@ test.describe.serial('flujo principal', () => {
     const nav = page.getByRole('navigation', { name: 'Navegación principal' })
     await expect(nav.getByRole('link', { name: 'Agenda' })).toBeVisible()
     await expect(nav.getByRole('link', { name: 'Clientes' })).toHaveCount(0)
-    await expect(nav.getByRole('link', { name: 'Plata' })).toHaveCount(0)
+    await expect(nav.getByRole('link', { name: 'Finanzas' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Nueva reserva' })).toHaveCount(0)
     await expect(page.getByText(/Cobrado este mes/)).toHaveCount(0)
     await page.goto('/clientes')

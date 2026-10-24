@@ -255,7 +255,7 @@ async function cancelarBaja() {
     <section class="tarjeta p-5">
       <h2 class="flex items-center gap-2 font-semibold"><Download class="size-4 text-marca-600" /> Informe completo en PDF</h2>
       <p class="mt-2 text-sm text-slate-600">Descarga un PDF con todos los datos de la organización: espacios, clientes, eventos, cuotas, cobros, gastos, tareas y fechas cerradas.
-        En Eventos, Clientes y Plata podés exportar cada listado con sus filtros.</p>
+        En Eventos, Clientes y Finanzas podés exportar cada listado con sus filtros.</p>
       <button class="btn-secundario mt-3" :disabled="exportando || !org.puede('datos.exportar')" @click="exportarTodo">
         {{ exportando ? 'Generando PDF…' : 'Descargar informe PDF' }}</button>
       <p v-if="!org.puede('datos.exportar')" class="mt-1 text-xs text-slate-500">Tu rol no permite exportar datos.</p>

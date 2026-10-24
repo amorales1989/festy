@@ -2,7 +2,7 @@
 // Proveedores: a quién se le terceriza (catering, DJ, decoración…), cuánto se comprometió y cuánto falta pagar.
 import { computed, onMounted, reactive, ref } from 'vue'
 import { MessageCircle, Pencil, Plus, Trash2, Truck } from 'lucide-vue-next'
-import PestanasPlata from '@/components/finanzas/PestanasPlata.vue'
+import PestanasFinanzas from '@/components/finanzas/PestanasFinanzas.vue'
 import Modal from '@/components/ui/Modal.vue'
 import Campo from '@/components/ui/Campo.vue'
 import Cargando from '@/components/ui/Cargando.vue'
@@ -71,7 +71,7 @@ async function borrar(p: Proveedor) {
 
 <template>
   <div class="space-y-4">
-    <PestanasPlata />
+    <PestanasFinanzas />
     <div class="flex flex-wrap items-center gap-3">
       <p class="text-sm text-slate-600">Cargá los costos de cada evento desde su ficha, en «Costos y proveedores».</p>
       <label class="ml-auto flex items-center gap-1.5 text-sm text-slate-600"><input v-model="verInactivos" type="checkbox" /> Ver inactivos</label>

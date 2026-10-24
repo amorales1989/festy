@@ -29,7 +29,7 @@ const navegacion = computed(() => [
   { a: '/reservas', etiqueta: 'Eventos', icono: PartyPopper, visible: org.puede('reservas.ver') },
   { a: '/presupuestos', etiqueta: 'Presupuestos', icono: FileText, visible: org.puede('presupuestos.ver') },
   { a: '/clientes', etiqueta: 'Clientes', icono: Users, visible: org.puede('clientes.ver') },
-  { a: org.puede('pagos.ver') ? '/cobros' : '/gastos', etiqueta: 'Plata', icono: Wallet, visible: org.puede('pagos.ver') || org.puede('gastos.ver') },
+  { a: org.puede('pagos.ver') ? '/cobros' : '/gastos', etiqueta: 'Finanzas', icono: Wallet, visible: org.puede('pagos.ver') || org.puede('gastos.ver') },
   { a: '/tareas', etiqueta: 'Tareas', icono: ListChecks, visible: org.puede('tareas.ver') },
   { a: '/configuracion', etiqueta: 'Ajustes', icono: Settings, visible: true },
 ].filter((n) => n.visible))

@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Download, Receipt, Wallet } from 'lucide-vue-next'
-import PestanasPlata from '@/components/finanzas/PestanasPlata.vue'
+import PestanasFinanzas from '@/components/finanzas/PestanasFinanzas.vue'
 import EstadoVacio from '@/components/ui/EstadoVacio.vue'
 import Cargando from '@/components/ui/Cargando.vue'
 import CampoFecha from '@/components/ui/CampoFecha.vue'
@@ -122,7 +122,7 @@ async function exportar() {
 
 <template>
   <div class="space-y-4">
-    <PestanasPlata />
+    <PestanasFinanzas />
     <div class="flex flex-wrap items-center justify-end gap-3">
       <button v-if="org.puede('datos.exportar') && org.tieneFuncion('exportacion')" class="btn-secundario" :disabled="exportando" @click="exportar"><Download class="size-4" /> {{ exportando ? 'Generando…' : 'Exportar PDF' }}</button>
     </div>

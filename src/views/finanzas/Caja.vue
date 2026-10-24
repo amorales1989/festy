@@ -2,7 +2,7 @@
 // Caja: saldo de cada cuenta (efectivo, banco, Mercado Pago…) y los movimientos del período.
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ArrowLeftRight, Download, Landmark, Pencil, Plus, Settings2 } from 'lucide-vue-next'
-import PestanasPlata from '@/components/finanzas/PestanasPlata.vue'
+import PestanasFinanzas from '@/components/finanzas/PestanasFinanzas.vue'
 import Modal from '@/components/ui/Modal.vue'
 import Campo from '@/components/ui/Campo.vue'
 import CampoFecha from '@/components/ui/CampoFecha.vue'
@@ -135,7 +135,7 @@ async function exportar() {
 
 <template>
   <div class="space-y-4">
-    <PestanasPlata />
+    <PestanasFinanzas />
     <div class="flex flex-wrap items-end gap-2">
       <div class="w-36"><CampoFecha v-model="filtro.desde" /></div>
       <div class="w-36"><CampoFecha v-model="filtro.hasta" /></div>

@@ -2,7 +2,7 @@
 // Rentabilidad: cuánto deja cada evento (total − costos de proveedores − gastos del evento).
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { Download, TrendingUp } from 'lucide-vue-next'
-import PestanasPlata from '@/components/finanzas/PestanasPlata.vue'
+import PestanasFinanzas from '@/components/finanzas/PestanasFinanzas.vue'
 import CampoFecha from '@/components/ui/CampoFecha.vue'
 import Cargando from '@/components/ui/Cargando.vue'
 import EstadoVacio from '@/components/ui/EstadoVacio.vue'
@@ -59,7 +59,7 @@ async function exportar() {
 
 <template>
   <div class="space-y-4">
-    <PestanasPlata />
+    <PestanasFinanzas />
     <div class="flex flex-wrap items-end gap-2">
       <div class="w-36"><CampoFecha v-model="filtro.desde" /></div>
       <div class="w-36"><CampoFecha v-model="filtro.hasta" /></div>

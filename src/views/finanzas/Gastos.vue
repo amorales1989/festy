@@ -5,7 +5,7 @@ import Modal from '@/components/ui/Modal.vue'
 import Campo from '@/components/ui/Campo.vue'
 import CampoFecha from '@/components/ui/CampoFecha.vue'
 import CampoMoneda from '@/components/ui/CampoMoneda.vue'
-import PestanasPlata from '@/components/finanzas/PestanasPlata.vue'
+import PestanasFinanzas from '@/components/finanzas/PestanasFinanzas.vue'
 import SelectorCuenta from '@/components/finanzas/SelectorCuenta.vue'
 import EstadoVacio from '@/components/ui/EstadoVacio.vue'
 import Cargando from '@/components/ui/Cargando.vue'
@@ -73,7 +73,7 @@ async function borrar(g: Fila<'gastos'>) {
 
 <template>
   <div class="space-y-4">
-    <PestanasPlata />
+    <PestanasFinanzas />
     <div class="flex flex-wrap items-center justify-end gap-3">
       <button v-if="org.puede('gastos.gestionar')" class="btn-primario" @click="abrir()"><Plus class="size-4" /> Nuevo gasto</button>
     </div>
