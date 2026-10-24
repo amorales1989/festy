@@ -25,6 +25,8 @@ export const useOrganizacion = defineStore('organizacion', () => {
   const espacios = ref<Espacio[]>([])
   const plan = ref<Fila<'planes'> | null>(null)
   const cargado = ref(false)
+  /** Empresas del usuario suspendidas por la administración (no se pueden usar). */
+  const suspendidas = ref<Array<{ id: string; nombre: string; motivo: string | null; suspendida_at: string }>>([])
 
   const id = computed(() => actual.value?.id ?? '')
   const zona = computed(() => actual.value?.zona_horaria ?? ZONA_POR_DEFECTO)
@@ -52,6 +54,7 @@ export const useOrganizacion = defineStore('organizacion', () => {
   async function cargarOrganizaciones() {
     const data = await api.get<Organizacion[]>('/organizaciones')
     organizaciones.value = data
+    suspendidas.value = data.length ? [] : await api.get<typeof suspendidas.value>('/empresas-suspendidas').catch(() => [])
     const sesion = useSesion()
     const preferida = localStorageSeguro.get(CLAVE_ORG) ?? sesion.perfil?.organizacion_actual
     const elegida = data.find((o) => o.id === preferida) ?? data[0] ?? null
@@ -110,7 +113,7 @@ export const useOrganizacion = defineStore('organizacion', () => {
   }
 
   return {
-    organizaciones, actual, permisos, rol, salones, sucursales, espacios, plan, cargado,
+    organizaciones, actual, permisos, rol, salones, sucursales, espacios, plan, cargado, suspendidas,
     id, zona, espaciosActivos, sucursalesActivas, tieneSedes,
     puede, tieneFuncion, cargarOrganizaciones, seleccionar, cargarSedes, refrescarActual, reiniciar,
   }

@@ -26,6 +26,7 @@ const rutas: RouteRecordRaw[] = [
   { path: '/s/:slug', name: 'pagina-salon', component: () => import('@/views/publico/PaginaSalon.vue'), meta: { libre: true, titulo: 'Pedí tu fecha' } },
   { path: '/invitacion/:token', component: () => import('@/views/auth/Invitacion.vue'), meta: { libre: true, titulo: 'Invitación' } },
   { path: '/plataforma', name: 'plataforma', component: () => import('@/views/plataforma/Plataforma.vue'), meta: { sinOrganizacion: true, titulo: 'Administración de Festy' } },
+  { path: '/sin-acceso', name: 'sin-acceso', component: () => import('@/views/auth/SinAcceso.vue'), meta: { sinOrganizacion: true, titulo: 'Sin acceso' } },
   { path: '/bienvenida', component: () => import('@/views/onboarding/Bienvenida.vue'), meta: { sinOrganizacion: true, titulo: 'Bienvenida' } },
   {
     path: '/',
@@ -92,8 +93,13 @@ router.beforeEach(async (to) => {
     }
   }
   if (to.name === 'plataforma' && !sesion.esAdminPlataforma) return { path: '/' }
+  // Crear una empresa por cuenta propia solo en desarrollo; en producción la da de alta Festy.
+  if (to.path === '/bienvenida' && !REGISTRO_PUBLICO && !sesion.esAdminPlataforma) return { name: 'sin-acceso' }
   if (to.meta.sinOrganizacion) return true
-  if (!org.actual) return sesion.esAdminPlataforma ? { name: 'plataforma' } : { path: '/bienvenida' }
+  if (!org.actual) {
+    if (sesion.esAdminPlataforma) return { name: 'plataforma' }
+    return org.suspendidas.length || !REGISTRO_PUBLICO ? { name: 'sin-acceso' } : { path: '/bienvenida' }
+  }
 
   if (to.meta.permiso && !org.puede(to.meta.permiso)) {
     useNotificaciones().info('No tenés permiso para ver esa sección.')

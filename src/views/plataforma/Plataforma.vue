@@ -2,7 +2,7 @@
 // Administración de Festy: alta de empresas cliente y listado de todas.
 // Solo para los administradores de la plataforma (lo verifica el servidor).
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ArrowLeft, Building2, CircleAlert, CircleCheck, Clock, Copy, History, KeyRound, LogOut, Plus, RefreshCw, Trash2, Wallet } from 'lucide-vue-next'
+import { ArrowLeft, Ban, Building2, CircleAlert, CircleCheck, Clock, Copy, History, KeyRound, LogOut, Play, Plus, RefreshCw, Trash2, Wallet } from 'lucide-vue-next'
 import Modal from '@/components/ui/Modal.vue'
 import Campo from '@/components/ui/Campo.vue'
 import Cargando from '@/components/ui/Cargando.vue'
@@ -21,6 +21,7 @@ import { useNotificaciones } from '@/composables/useNotificaciones'
 interface Empresa {
   id: string; nombre: string; estado: string; creado_at: string; usuarios: number; eventos: number; ultimo_evento_cargado: string | null; pagina: string | null
   duenio: { nombre: string | null; email: string; ultimo_ingreso: string | null } | null
+  suspendida_at: string | null; suspension_motivo: string | null
   precio: number; precio_tarifa: number; precio_especial: number | null; sedes: number; pagado_hasta: string | null
   ultimo_pago: { id: string; fecha: string; monto: number; medio: string; meses: number } | null
 }
@@ -86,7 +87,7 @@ async function copiar() {
   try { await navigator.clipboard.writeText(textoAcceso.value); exito('Datos de acceso copiados.') } catch { /* el navegador no permite copiar */ }
 }
 // --- Cobro de la suscripción -------------------------------------------------------
-const { confirmar } = useConfirmar()
+const { confirmar, pedirTexto } = useConfirmar()
 const { error: notificarError } = useNotificaciones()
 const hoy = hoyISO(ZONA_POR_DEFECTO)
 const diasEntre = (a: string, b: string) => Math.round((new Date(`${b}T00:00:00Z`).getTime() - new Date(`${a}T00:00:00Z`).getTime()) / 864e5)
@@ -123,12 +124,14 @@ const resumenCobro = computed(() => {
 const pagoAbierto = ref(false)
 const empresaPago = ref<Empresa | null>(null)
 const fp = reactive({ fecha: hoy, meses: 1, monto: null as number | null, medio: 'transferencia', notas: '' })
+const reactivarConPago = ref(true)
 const errorPago = ref('')
 const montoTocado = ref(false)
 function abrirPago(e: Empresa) {
   empresaPago.value = e
   Object.assign(fp, { fecha: hoy, meses: 1, monto: Number(e.precio), medio: e.ultimo_pago?.medio ?? 'transferencia', notas: '' })
   montoTocado.value = false
+  reactivarConPago.value = true
   errorPago.value = ''
   pagoAbierto.value = true
 }
@@ -146,7 +149,9 @@ async function registrarPago() {
   if (!fp.monto || fp.monto <= 0) { errorPago.value = 'Ingresá el monto.'; return }
   try {
     await api.post(`/plataforma/empresas/${empresaPago.value!.id}/pagos`, { ...fp })
-    exito(`Pago registrado. ${empresaPago.value!.nombre} queda al día hasta el ${fmtFecha(cubreHasta.value, ZONA_POR_DEFECTO)}.`)
+    const reactivada = empresaPago.value!.estado === 'suspendida' && reactivarConPago.value
+    if (reactivada) await api.put(`/plataforma/empresas/${empresaPago.value!.id}/estado`, { estado: 'activa' })
+    exito(`Pago registrado. ${empresaPago.value!.nombre} queda al día hasta el ${fmtFecha(cubreHasta.value, ZONA_POR_DEFECTO)}${reactivada ? ' y se reactivó' : ''}.`)
     pagoAbierto.value = false
     await cargar()
     if (historialAbierto.value && empresaHist.value) void cargarHistorial()
@@ -184,6 +189,28 @@ async function borrarPago(p: PagoSuscripcion) {
   } catch (e) { notificarError(e) }
 }
 const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspendida', baja_solicitada: 'Baja solicitada' }
+
+// --- Suspensión por falta de pago --------------------------------------------------
+async function suspender(e: Empresa) {
+  const vencido = estadoPago(e).tono === 'mal' ? ` (${estadoPago(e).texto.toLowerCase()})` : ''
+  const motivo = await pedirTexto({ titulo: `Suspender ${e.nombre}`, peligro: true, confirmar: 'Suspender',
+    mensaje: `Sus usuarios no van a poder entrar ni usar la app, y su página pública deja de verse${vencido}. Los datos no se borran: al reactivarla sigue todo igual.`,
+    etiquetaTexto: 'Motivo (lo ve el cliente al entrar)' })
+  if (motivo === null) return
+  try {
+    await api.put(`/plataforma/empresas/${e.id}/estado`, { estado: 'suspendida', motivo })
+    exito(`${e.nombre} quedó suspendida.`)
+    await cargar()
+  } catch (err) { notificarError(err) }
+}
+async function reactivar(e: Empresa) {
+  if (!(await confirmar({ titulo: `Reactivar ${e.nombre}`, confirmar: 'Reactivar', mensaje: 'Sus usuarios vuelven a entrar y ven todos sus datos.' }))) return
+  try {
+    await api.put(`/plataforma/empresas/${e.id}/estado`, { estado: 'activa' })
+    exito(`${e.nombre} está activa de nuevo.`)
+    await cargar()
+  } catch (err) { notificarError(err) }
+}
 </script>
 
 <template>
@@ -213,6 +240,7 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
         <span class="text-emerald-700">{{ resumenCobro.al_dia }} al día</span>
         <span :class="resumenCobro.vencidas ? 'font-semibold text-rose-700' : 'text-slate-500'">{{ resumenCobro.vencidas }} {{ resumenCobro.vencidas === 1 ? 'vencida' : 'vencidas' }}</span>
         <span class="text-slate-500">{{ resumenCobro.sin_pagos }} sin pagos</span>
+        <span v-if="empresas.some((e) => e.estado === 'suspendida')" class="font-semibold text-rose-700">{{ empresas.filter((e) => e.estado === 'suspendida').length }} suspendidas</span>
       </p>
       <p v-if="error" class="rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">{{ error }}</p>
       <div class="tarjeta overflow-x-auto">
@@ -226,7 +254,10 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
               <td class="min-w-48"><span class="font-medium">{{ e.nombre }}</span>
                 <span class="block text-xs text-slate-500">{{ e.duenio?.nombre || '—' }} · {{ e.duenio?.email }}</span>
                 <a v-if="e.pagina" :href="`/s/${e.pagina}`" target="_blank" rel="noopener" class="text-xs text-marca-700 hover:underline">/s/{{ e.pagina }}</a>
-                <span v-if="e.estado !== 'activa'" class="ml-1 text-xs text-rose-700">{{ ESTADOS[e.estado] ?? e.estado }}</span></td>
+                <span v-if="e.estado === 'suspendida'" class="mt-1 flex w-fit items-center gap-1 rounded-full bg-rose-600 px-2 py-0.5 text-xs font-medium text-white">
+                  <Ban class="size-3" /> Suspendida{{ e.suspendida_at ? ` desde ${fmtFecha(e.suspendida_at, ZONA_POR_DEFECTO)}` : '' }}</span>
+                <span v-if="e.estado === 'suspendida' && e.suspension_motivo" class="block text-xs text-rose-700">{{ e.suspension_motivo }}</span>
+                <span v-else-if="e.estado === 'baja_solicitada'" class="block text-xs text-rose-700">{{ ESTADOS[e.estado] }}</span></td>
               <td class="whitespace-nowrap text-right"><span class="tabular-nums">{{ fmtMoneda(e.precio, true) }}</span>
                 <span class="block text-xs text-slate-500">{{ e.precio_especial !== null ? 'precio especial' : `tarifa · ${Math.max(e.sedes, 1)} ${e.sedes > 1 ? 'salones' : 'salón'}` }}</span></td>
               <td class="whitespace-nowrap"><template v-if="e.ultimo_pago">{{ fmtFecha(e.ultimo_pago.fecha, ZONA_POR_DEFECTO) }}
@@ -240,6 +271,8 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
               <td class="whitespace-nowrap text-right">
                 <button class="btn-secundario btn-chico" @click="abrirPago(e)"><Wallet class="size-4" /> Registrar pago</button>
                 <button class="btn-fantasma btn-chico" :aria-label="`Pagos y precio de ${e.nombre}`" @click="abrirHistorial(e)"><History class="size-4" /> Pagos</button>
+                <button v-if="e.estado === 'activa'" class="btn-fantasma btn-chico text-rose-700" :aria-label="`Suspender ${e.nombre}`" @click="suspender(e)"><Ban class="size-4" /> Suspender</button>
+                <button v-else-if="e.estado === 'suspendida'" class="btn-fantasma btn-chico text-emerald-700" :aria-label="`Reactivar ${e.nombre}`" @click="reactivar(e)"><Play class="size-4" /> Reactivar</button>
               </td>
             </tr>
           </tbody>
@@ -288,6 +321,8 @@ const ESTADOS: Record<string, string> = { activa: 'Activa', suspendida: 'Suspend
         <Campo etiqueta="Medio" para="ps-medio"><select id="ps-medio" v-model="fp.medio" class="entrada">
           <option v-for="(m, k) in MEDIOS_PAGO" :key="k" :value="k">{{ m }}</option></select></Campo>
         <Campo etiqueta="Nota (opcional)" para="ps-notas"><input id="ps-notas" v-model="fp.notas" class="entrada" placeholder="N° de operación, factura…" /></Campo>
+        <label v-if="empresaPago?.estado === 'suspendida'" class="flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-900">
+          <input v-model="reactivarConPago" type="checkbox" /> La empresa está suspendida: reactivarla con este pago</label>
         <p v-if="cubreHasta" class="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
           Cubre del {{ fmtFecha(cubreDesde, ZONA_POR_DEFECTO) }} al {{ fmtFecha(cubreHasta, ZONA_POR_DEFECTO) }}.</p>
         <p v-if="errorPago" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ errorPago }}</p>

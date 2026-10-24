@@ -91,4 +91,29 @@ test.describe.serial('administración de la plataforma', () => {
     await expect(page.getByRole('heading', { name: 'HOY' })).toBeVisible()
     await expect(page.getByText(duenio.empresa).first()).toBeVisible()
   })
+
+  test('suspensión por falta de pago y reactivación al pagar', async ({ page, browser }) => {
+    await ingresar(page, ADMIN.email, ADMIN.clave)
+    await expect(page.getByRole('heading', { name: 'Administración de Festy' })).toBeVisible()
+    const fila = page.getByRole('row', { name: new RegExp(duenio.empresa) })
+    await fila.getByRole('button', { name: `Suspender ${duenio.empresa}` }).click()
+    await page.getByLabel('Motivo (lo ve el cliente al entrar)').fill('Falta de pago de noviembre')
+    await page.getByRole('button', { name: 'Suspender', exact: true }).click()
+    await expect(fila).toContainText('Suspendida')
+
+    const otro = await (await browser.newContext({ locale: 'es-AR' })).newPage()
+    await ingresar(otro, duenio.email, claveInicial)
+    await expect(otro.getByRole('heading', { name: 'Cuenta suspendida' })).toBeVisible()
+    await expect(otro.getByText('Falta de pago de noviembre')).toBeVisible()
+    await captura(otro, '32-cuenta-suspendida')
+
+    await fila.getByRole('button', { name: 'Registrar pago' }).click()
+    const pago = page.getByRole('dialog', { name: 'Registrar pago' })
+    await expect(pago.getByText('La empresa está suspendida')).toBeVisible()
+    await pago.getByRole('button', { name: 'Registrar pago' }).click()
+    await expect(fila).not.toContainText('Suspendida')
+
+    await otro.getByRole('button', { name: 'Volver a intentar' }).click()
+    await expect(otro.getByRole('heading', { name: 'HOY' })).toBeVisible()
+  })
 })
