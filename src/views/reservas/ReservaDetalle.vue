@@ -8,6 +8,8 @@ import Modal from '@/components/ui/Modal.vue'
 import Campo from '@/components/ui/Campo.vue'
 import CampoFecha from '@/components/ui/CampoFecha.vue'
 import CampoMoneda from '@/components/ui/CampoMoneda.vue'
+import SelectorCuenta from '@/components/finanzas/SelectorCuenta.vue'
+import CostosEvento from '@/components/reservas/CostosEvento.vue'
 import type { EstadoContrato, EstadoReserva, Fila } from '@/lib/supabase'
 import { api, eliminar as eliminarRegistro, rutaOrg } from '@/lib/api'
 import { traducirError } from '@/lib/errores'
@@ -136,11 +138,11 @@ async function eliminar() {
 
 // --- Cobros ---------------------------------------------------------------
 const pagoAbierto = ref(false)
-const pago = reactive({ monto: null as number | null, fecha: '', medio: 'transferencia', concepto: 'cuota', referencia: '', notas: '' })
+const pago = reactive({ monto: null as number | null, fecha: '', medio: 'transferencia', concepto: 'cuota', referencia: '', notas: '', cuenta_id: '' })
 const guardandoPago = ref(false)
 const errorPago = ref('')
 function abrirPago() {
-  Object.assign(pago, { monto: null, fecha: hoy.value, medio: 'transferencia', referencia: '', notas: '',
+  Object.assign(pago, { monto: null, fecha: hoy.value, medio: 'transferencia', referencia: '', notas: '', cuenta_id: '',
     concepto: ['consulta', 'tentativa'].includes(reserva.value?.estado ?? '') ? 'sena' : 'cuota' })
   const proxima = cuotas.value.find((c) => c.pendiente > 0)
   if (proxima) pago.monto = proxima.pendiente
@@ -154,7 +156,7 @@ async function registrarPago() {
   guardandoPago.value = true
   try {
     const { id: pagoId } = await api.post<{ id: string }>(`/reservas/${id.value}/pagos`, {
-      monto: pago.monto, fecha: pago.fecha, medio: pago.medio, concepto: pago.concepto, referencia: pago.referencia, notas: pago.notas,
+      monto: pago.monto, fecha: pago.fecha, medio: pago.medio, concepto: pago.concepto, referencia: pago.referencia, notas: pago.notas, cuenta_id: pago.cuenta_id,
     })
     pagoAbierto.value = false
     acciones.cambiosGuardados()
@@ -329,10 +331,10 @@ const eventoTermino = computed(() => !!reserva.value && new Date(reserva.value.f
 const garantiaSugerida = computed(() => Math.max(0, ...(reserva.value?.reserva_espacios ?? []).map((e) => Number(org.espacios.find((x) => x.id === e.espacios?.id)?.garantia_sugerida ?? 0))))
 const garModo = ref<'pedir' | 'cobrar' | 'devolver' | null>(null)
 const garAbierto = computed({ get: () => !!garModo.value, set: (v) => { if (!v) garModo.value = null } })
-const gar = reactive({ monto: null as number | null, fecha: '', medio: 'transferencia', referencia: '', completa: true, devuelto: null as number | null, motivo: '' })
+const gar = reactive({ monto: null as number | null, fecha: '', medio: 'transferencia', referencia: '', completa: true, devuelto: null as number | null, motivo: '', cuenta_id: '' })
 const errorGar = ref('')
 function abrirGarantia(modo: 'pedir' | 'cobrar' | 'devolver') {
-  Object.assign(gar, { monto: garantia.value ? Number(garantia.value.monto) : (garantiaSugerida.value || null), fecha: hoy.value, medio: 'transferencia',
+  Object.assign(gar, { monto: garantia.value ? Number(garantia.value.monto) : (garantiaSugerida.value || null), fecha: hoy.value, medio: 'transferencia', cuenta_id: '',
     referencia: '', completa: true, devuelto: garantia.value ? Number(garantia.value.monto) : null, motivo: '' })
   errorGar.value = ''
   garModo.value = modo
@@ -345,11 +347,11 @@ async function confirmarGarantia() {
       await api.put(`/reservas/${id.value}/garantia`, { monto: gar.monto })
       exito('Garantía pedida.')
     } else if (garModo.value === 'cobrar') {
-      await api.post(`/reservas/${id.value}/garantia/cobro`, { fecha: gar.fecha, medio: gar.medio, referencia: gar.referencia })
+      await api.post(`/reservas/${id.value}/garantia/cobro`, { fecha: gar.fecha, medio: gar.medio, referencia: gar.referencia, cuenta_id: gar.cuenta_id })
       exito('Garantía cobrada. Descargá o enviá el recibo.')
     } else {
       const devuelto = gar.completa ? Number(garantia.value!.monto) : (gar.devuelto ?? 0)
-      await api.post(`/reservas/${id.value}/garantia/devolucion`, { fecha: gar.fecha, monto_devuelto: devuelto, medio: gar.medio,
+      await api.post(`/reservas/${id.value}/garantia/devolucion`, { fecha: gar.fecha, monto_devuelto: devuelto, medio: gar.medio, cuenta_id: gar.cuenta_id,
         motivo: gar.completa ? null : gar.motivo })
       exito('Devolución registrada.')
     }
@@ -618,6 +620,8 @@ function describirCambio(cambios: unknown): string {
           <p v-else class="mt-2 text-sm text-slate-500">No hay servicios detallados: el total ({{ fmtMoneda(reserva.precio_total) }}) se cargó a mano.</p>
         </section>
 
+        <CostosEvento v-if="org.puede('gastos.ver')" :reserva-id="reserva.id" :tiene-servicios="items.length > 0" :cancelada="reserva.estado === 'cancelada'" />
+
         <!-- Garantía -->
         <section v-if="org.puede('pagos.ver')" class="tarjeta p-4">
           <h2 class="flex items-center gap-2 text-sm font-semibold"><ShieldCheck class="size-4 text-amber-600" /> Depósito de garantía</h2>
@@ -698,6 +702,7 @@ function describirCambio(cambios: unknown): string {
         <Campo etiqueta="Medio de pago" para="p-medio">
           <select id="p-medio" v-model="pago.medio" class="entrada"><option v-for="(t, k) in MEDIOS_PAGO" :key="k" :value="k">{{ t }}</option></select>
         </Campo>
+        <Campo etiqueta="Entra en la cuenta" para="p-cuenta"><SelectorCuenta id="p-cuenta" v-model="pago.cuenta_id" :medio="pago.medio" /></Campo>
         <Campo etiqueta="Referencia" para="p-ref" ayuda="Nº de operación, recibo o comprobante."><input id="p-ref" v-model="pago.referencia" class="entrada" /></Campo>
         <p v-if="pago.concepto === 'sena' && ['consulta', 'tentativa'].includes(reserva?.estado ?? '')" class="rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-800">
           Al registrar la seña, la reserva pasa a <strong>Señada</strong> y la fecha queda bloqueada.
@@ -759,6 +764,7 @@ function describirCambio(cambios: unknown): string {
             <Campo etiqueta="Fecha" para="g-fecha"><CampoFecha id="g-fecha" v-model="gar.fecha" /></Campo>
             <Campo etiqueta="Medio" para="g-medio"><select id="g-medio" v-model="gar.medio" class="entrada"><option v-for="(m, k) in MEDIOS_PAGO" :key="k" :value="k">{{ m }}</option></select></Campo>
           </div>
+          <Campo :etiqueta="garModo === 'cobrar' ? 'Entra en la cuenta' : 'Sale de la cuenta'" para="g-cuenta"><SelectorCuenta id="g-cuenta" v-model="gar.cuenta_id" :medio="gar.medio" /></Campo>
           <Campo v-if="garModo === 'cobrar'" etiqueta="Referencia" para="g-ref"><input id="g-ref" v-model="gar.referencia" class="entrada" placeholder="N° de operación (opcional)" /></Campo>
         </template>
         <p v-if="errorGar" class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ errorGar }}</p>

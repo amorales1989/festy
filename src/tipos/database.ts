@@ -148,6 +148,122 @@ export type Database = {
           },
         ]
       }
+      costos_evento: {
+        Row: {
+          creado_at: string
+          descripcion: string
+          es_ejemplo: boolean
+          id: string
+          monto: number
+          organizacion_id: string
+          proveedor_id: string | null
+          reserva_id: string
+          reserva_item_id: string | null
+          vencimiento: string | null
+        }
+        Insert: {
+          creado_at?: string
+          descripcion: string
+          es_ejemplo?: boolean
+          id?: string
+          monto: number
+          organizacion_id: string
+          proveedor_id?: string | null
+          reserva_id: string
+          reserva_item_id?: string | null
+          vencimiento?: string | null
+        }
+        Update: {
+          creado_at?: string
+          descripcion?: string
+          es_ejemplo?: boolean
+          id?: string
+          monto?: number
+          organizacion_id?: string
+          proveedor_id?: string | null
+          reserva_id?: string
+          reserva_item_id?: string | null
+          vencimiento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "costos_evento_organizacion_id_fkey"
+            columns: ["organizacion_id"]
+            isOneToOne: false
+            referencedRelation: "organizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "costos_evento_organizacion_id_proveedor_id_fkey"
+            columns: ["organizacion_id", "proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["organizacion_id", "id"]
+          },
+          {
+            foreignKeyName: "costos_evento_organizacion_id_reserva_id_fkey"
+            columns: ["organizacion_id", "reserva_id"]
+            isOneToOne: false
+            referencedRelation: "reservas"
+            referencedColumns: ["organizacion_id", "id"]
+          },
+          {
+            foreignKeyName: "costos_evento_organizacion_id_reserva_id_fkey"
+            columns: ["organizacion_id", "reserva_id"]
+            isOneToOne: false
+            referencedRelation: "v_reservas_saldo"
+            referencedColumns: ["organizacion_id", "reserva_id"]
+          },
+          {
+            foreignKeyName: "costos_evento_reserva_item_id_fkey"
+            columns: ["reserva_item_id"]
+            isOneToOne: true
+            referencedRelation: "reserva_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cuentas: {
+        Row: {
+          activo: boolean
+          creado_at: string
+          id: string
+          medios: string[]
+          nombre: string
+          organizacion_id: string
+          saldo_inicial: number
+          tipo: string
+        }
+        Insert: {
+          activo?: boolean
+          creado_at?: string
+          id?: string
+          medios?: string[]
+          nombre: string
+          organizacion_id: string
+          saldo_inicial?: number
+          tipo?: string
+        }
+        Update: {
+          activo?: boolean
+          creado_at?: string
+          id?: string
+          medios?: string[]
+          nombre?: string
+          organizacion_id?: string
+          saldo_inicial?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cuentas_organizacion_id_fkey"
+            columns: ["organizacion_id"]
+            isOneToOne: false
+            referencedRelation: "organizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cuotas: {
         Row: {
           concepto: string
@@ -487,10 +603,12 @@ export type Database = {
         Row: {
           actualizado_at: string
           cobrada_por: string | null
+          cobro_cuenta_id: string | null
           cobro_fecha: string | null
           cobro_medio: string | null
           cobro_referencia: string | null
           creado_at: string
+          devolucion_cuenta_id: string | null
           devolucion_fecha: string | null
           devolucion_medio: string | null
           devolucion_monto: number | null
@@ -508,10 +626,12 @@ export type Database = {
         Insert: {
           actualizado_at?: string
           cobrada_por?: string | null
+          cobro_cuenta_id?: string | null
           cobro_fecha?: string | null
           cobro_medio?: string | null
           cobro_referencia?: string | null
           creado_at?: string
+          devolucion_cuenta_id?: string | null
           devolucion_fecha?: string | null
           devolucion_medio?: string | null
           devolucion_monto?: number | null
@@ -529,10 +649,12 @@ export type Database = {
         Update: {
           actualizado_at?: string
           cobrada_por?: string | null
+          cobro_cuenta_id?: string | null
           cobro_fecha?: string | null
           cobro_medio?: string | null
           cobro_referencia?: string | null
           creado_at?: string
+          devolucion_cuenta_id?: string | null
           devolucion_fecha?: string | null
           devolucion_medio?: string | null
           devolucion_monto?: number | null
@@ -548,6 +670,20 @@ export type Database = {
           reserva_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "garantias_organizacion_id_cobro_cuenta_id_fkey"
+            columns: ["organizacion_id", "cobro_cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas"
+            referencedColumns: ["organizacion_id", "id"]
+          },
+          {
+            foreignKeyName: "garantias_organizacion_id_devolucion_cuenta_id_fkey"
+            columns: ["organizacion_id", "devolucion_cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas"
+            referencedColumns: ["organizacion_id", "id"]
+          },
           {
             foreignKeyName: "garantias_organizacion_id_reserva_id_fkey"
             columns: ["organizacion_id", "reserva_id"]
@@ -567,7 +703,9 @@ export type Database = {
       gastos: {
         Row: {
           categoria: string
+          costo_id: string | null
           creado_at: string
+          cuenta_id: string | null
           descripcion: string
           es_ejemplo: boolean
           fecha: string
@@ -576,13 +714,16 @@ export type Database = {
           monto: number
           organizacion_id: string
           proveedor: string | null
+          proveedor_id: string | null
           registrado_por: string | null
           reserva_id: string | null
           sucursal_id: string | null
         }
         Insert: {
           categoria?: string
+          costo_id?: string | null
           creado_at?: string
+          cuenta_id?: string | null
           descripcion: string
           es_ejemplo?: boolean
           fecha: string
@@ -591,13 +732,16 @@ export type Database = {
           monto: number
           organizacion_id: string
           proveedor?: string | null
+          proveedor_id?: string | null
           registrado_por?: string | null
           reserva_id?: string | null
           sucursal_id?: string | null
         }
         Update: {
           categoria?: string
+          costo_id?: string | null
           creado_at?: string
+          cuenta_id?: string | null
           descripcion?: string
           es_ejemplo?: boolean
           fecha?: string
@@ -606,17 +750,39 @@ export type Database = {
           monto?: number
           organizacion_id?: string
           proveedor?: string | null
+          proveedor_id?: string | null
           registrado_por?: string | null
           reserva_id?: string | null
           sucursal_id?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "gastos_organizacion_id_costo_id_fkey"
+            columns: ["organizacion_id", "costo_id"]
+            isOneToOne: false
+            referencedRelation: "costos_evento"
+            referencedColumns: ["organizacion_id", "id"]
+          },
+          {
+            foreignKeyName: "gastos_organizacion_id_cuenta_id_fkey"
+            columns: ["organizacion_id", "cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas"
+            referencedColumns: ["organizacion_id", "id"]
+          },
+          {
             foreignKeyName: "gastos_organizacion_id_fkey"
             columns: ["organizacion_id"]
             isOneToOne: false
             referencedRelation: "organizaciones"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gastos_organizacion_id_proveedor_id_fkey"
+            columns: ["organizacion_id", "proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["organizacion_id", "id"]
           },
           {
             foreignKeyName: "gastos_organizacion_id_reserva_id_fkey"
@@ -868,6 +1034,10 @@ export type Database = {
           moneda: string
           nombre: string
           onboarding_completado: boolean
+          pagina_activa: boolean
+          pagina_descripcion: string | null
+          pagina_slug: string | null
+          pagina_whatsapp: string | null
           plan_clave: string
           prueba_hasta: string | null
           razon_social: string | null
@@ -898,6 +1068,10 @@ export type Database = {
           moneda?: string
           nombre: string
           onboarding_completado?: boolean
+          pagina_activa?: boolean
+          pagina_descripcion?: string | null
+          pagina_slug?: string | null
+          pagina_whatsapp?: string | null
           plan_clave?: string
           prueba_hasta?: string | null
           razon_social?: string | null
@@ -928,6 +1102,10 @@ export type Database = {
           moneda?: string
           nombre?: string
           onboarding_completado?: boolean
+          pagina_activa?: boolean
+          pagina_descripcion?: string | null
+          pagina_slug?: string | null
+          pagina_whatsapp?: string | null
           plan_clave?: string
           prueba_hasta?: string | null
           razon_social?: string | null
@@ -958,6 +1136,7 @@ export type Database = {
           anulado_por: string | null
           concepto: string
           creado_at: string
+          cuenta_id: string | null
           fecha: string
           id: string
           medio: string
@@ -976,6 +1155,7 @@ export type Database = {
           anulado_por?: string | null
           concepto?: string
           creado_at?: string
+          cuenta_id?: string | null
           fecha: string
           id?: string
           medio?: string
@@ -994,6 +1174,7 @@ export type Database = {
           anulado_por?: string | null
           concepto?: string
           creado_at?: string
+          cuenta_id?: string | null
           fecha?: string
           id?: string
           medio?: string
@@ -1006,6 +1187,13 @@ export type Database = {
           reserva_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pagos_organizacion_id_cuenta_id_fkey"
+            columns: ["organizacion_id", "cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas"
+            referencedColumns: ["organizacion_id", "id"]
+          },
           {
             foreignKeyName: "pagos_organizacion_id_reserva_id_fkey"
             columns: ["organizacion_id", "reserva_id"]
@@ -1297,6 +1485,53 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_reservas_saldo"
             referencedColumns: ["organizacion_id", "reserva_id"]
+          },
+        ]
+      }
+      proveedores: {
+        Row: {
+          activo: boolean
+          creado_at: string
+          email: string | null
+          es_ejemplo: boolean
+          id: string
+          nombre: string
+          notas: string | null
+          organizacion_id: string
+          rubro: string | null
+          telefono: string | null
+        }
+        Insert: {
+          activo?: boolean
+          creado_at?: string
+          email?: string | null
+          es_ejemplo?: boolean
+          id?: string
+          nombre: string
+          notas?: string | null
+          organizacion_id: string
+          rubro?: string | null
+          telefono?: string | null
+        }
+        Update: {
+          activo?: boolean
+          creado_at?: string
+          email?: string | null
+          es_ejemplo?: boolean
+          id?: string
+          nombre?: string
+          notas?: string | null
+          organizacion_id?: string
+          rubro?: string | null
+          telefono?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proveedores_organizacion_id_fkey"
+            columns: ["organizacion_id"]
+            isOneToOne: false
+            referencedRelation: "organizaciones"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1901,6 +2136,64 @@ export type Database = {
           },
         ]
       }
+      transferencias: {
+        Row: {
+          creado_at: string
+          descripcion: string | null
+          desde_cuenta_id: string
+          fecha: string
+          hacia_cuenta_id: string
+          id: string
+          monto: number
+          organizacion_id: string
+          registrado_por: string | null
+        }
+        Insert: {
+          creado_at?: string
+          descripcion?: string | null
+          desde_cuenta_id: string
+          fecha: string
+          hacia_cuenta_id: string
+          id?: string
+          monto: number
+          organizacion_id: string
+          registrado_por?: string | null
+        }
+        Update: {
+          creado_at?: string
+          descripcion?: string | null
+          desde_cuenta_id?: string
+          fecha?: string
+          hacia_cuenta_id?: string
+          id?: string
+          monto?: number
+          organizacion_id?: string
+          registrado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transferencias_organizacion_id_desde_cuenta_id_fkey"
+            columns: ["organizacion_id", "desde_cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas"
+            referencedColumns: ["organizacion_id", "id"]
+          },
+          {
+            foreignKeyName: "transferencias_organizacion_id_fkey"
+            columns: ["organizacion_id"]
+            isOneToOne: false
+            referencedRelation: "organizaciones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_organizacion_id_hacia_cuenta_id_fkey"
+            columns: ["organizacion_id", "hacia_cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "cuentas"
+            referencedColumns: ["organizacion_id", "id"]
+          },
+        ]
+      }
     }
     Views: {
       v_cuotas_estado: {
@@ -1971,13 +2264,25 @@ export type Database = {
         }
         Returns: string
       }
+      asignar_cuenta_garantia: {
+        Args: { p_cuenta: string; p_momento: string; p_reserva: string }
+        Returns: undefined
+      }
       borrar_datos_ejemplo: { Args: { p_org: string }; Returns: undefined }
       buscar_global: { Args: { p_org: string; p_q: string }; Returns: Json }
+      caja_resumen: {
+        Args: { p_desde: string; p_hasta: string; p_org: string }
+        Returns: Json
+      }
       cancelar_baja_organizacion: {
         Args: { p_org: string }
         Returns: undefined
       }
       cargar_datos_ejemplo: { Args: { p_org: string }; Returns: Json }
+      cargar_ejemplos_proveedores: {
+        Args: { p_org: string }
+        Returns: undefined
+      }
       checklist_configuracion: { Args: { p_org: string }; Returns: Json }
       cobrar_garantia: {
         Args: {
@@ -1988,8 +2293,13 @@ export type Database = {
         }
         Returns: number
       }
+      crear_cuentas_iniciales: { Args: { p_org: string }; Returns: undefined }
       crear_organizacion: {
         Args: { p_nombre: string; p_zona_horaria?: string }
+        Returns: string
+      }
+      cuenta_de_medio: {
+        Args: { p_medio: string; p_org: string }
         Returns: string
       }
       devolver_garantia: {
@@ -2052,6 +2362,18 @@ export type Database = {
         }[]
       }
       mis_permisos: { Args: { p_org: string }; Returns: string[] }
+      movimientos_caja: {
+        Args: { p_org: string }
+        Returns: {
+          cuenta_id: string
+          descripcion: string
+          fecha: string
+          monto: number
+          origen_id: string
+          reserva_id: string
+          tipo: string
+        }[]
+      }
       normalizar: { Args: { t: string }; Returns: string }
       notificar: {
         Args: {
@@ -2072,6 +2394,49 @@ export type Database = {
       org_tiene_funcion: {
         Args: { p_funcion: string; p_org: string }
         Returns: boolean
+      }
+      organizacion_publica: {
+        Args: { p_slug: string }
+        Returns: {
+          actualizado_at: string
+          baja_solicitada_at: string | null
+          color_marca: string
+          condiciones_presupuesto: string | null
+          creado_at: string
+          creado_por: string | null
+          cuit: string | null
+          dias_devolucion_garantia: number
+          direccion: string | null
+          email_contacto: string | null
+          estado: Database["public"]["Enums"]["estado_organizacion"]
+          horas_vencimiento_tentativa: number
+          id: string
+          logo: string | null
+          moneda: string
+          nombre: string
+          onboarding_completado: boolean
+          pagina_activa: boolean
+          pagina_descripcion: string | null
+          pagina_slug: string | null
+          pagina_whatsapp: string | null
+          plan_clave: string
+          prueba_hasta: string | null
+          razon_social: string | null
+          suscripcion_estado: Database["public"]["Enums"]["estado_suscripcion"]
+          telefono: string | null
+          ultimo_numero_comprobante: number
+          ultimo_numero_garantia: number
+          ultimo_numero_presupuesto: number
+          ultimo_numero_reserva: number
+          validez_presupuesto_dias: number
+          zona_horaria: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organizaciones"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       panel_resumen: {
         Args: {
@@ -2098,6 +2463,7 @@ export type Database = {
       registrar_pago: {
         Args: {
           p_concepto: string
+          p_cuenta?: string
           p_fecha: string
           p_medio: string
           p_monto: number

@@ -19,8 +19,7 @@ Lo que **no** está hecho o depende de configuración externa. Nada de esto se s
 
 ## Funcionalidad pendiente (próximas fases)
 - Contratos: plantillas, PDF y firma. Hoy solo se gestiona el estado del contrato.
-- Rentabilidad por evento: el catálogo ya guarda el costo de cada servicio, pero falta el reporte de ganancia y el registro de proveedores.
-- Página web pública del salón con pedido de fecha.
+- Página web del salón: falta galería de fotos (requiere almacenamiento de archivos) y pedir reseñas de Google después del evento.
 - Reserva de **recursos** con stock por fecha (hoy los recursos son un inventario por sede).
 - Presupuestos y catálogo de servicios/adicionales.
 - Restricción de usuarios a sedes específicas (hoy un usuario ve todas las sedes de su organización).

@@ -6,6 +6,7 @@ import Campo from '@/components/ui/Campo.vue'
 import CampoFecha from '@/components/ui/CampoFecha.vue'
 import CampoMoneda from '@/components/ui/CampoMoneda.vue'
 import PestanasPlata from '@/components/finanzas/PestanasPlata.vue'
+import SelectorCuenta from '@/components/finanzas/SelectorCuenta.vue'
 import EstadoVacio from '@/components/ui/EstadoVacio.vue'
 import Cargando from '@/components/ui/Cargando.vue'
 import type { Fila } from '@/lib/supabase'
@@ -41,18 +42,18 @@ const total = computed(() => gastos.value.reduce((s, g) => s + Number(g.monto), 
 
 const abierto = ref(false)
 const editando = ref<Fila<'gastos'> | null>(null)
-const f = reactive({ fecha: '', categoria: 'otro', descripcion: '', proveedor: '', monto: null as number | null, medio: 'efectivo', sucursal_id: '' })
+const f = reactive({ fecha: '', categoria: 'otro', descripcion: '', proveedor: '', monto: null as number | null, medio: 'efectivo', sucursal_id: '', cuenta_id: '' })
 const errorForm = ref('')
 function abrir(g: Fila<'gastos'> | null = null) {
   editando.value = g
-  Object.assign(f, g ? { fecha: g.fecha, categoria: g.categoria, descripcion: g.descripcion, proveedor: g.proveedor ?? '', monto: Number(g.monto), medio: g.medio, sucursal_id: g.sucursal_id ?? '' }
-    : { fecha: hoyISO(org.zona), categoria: 'otro', descripcion: '', proveedor: '', monto: null, medio: 'efectivo', sucursal_id: org.sucursalesActivas.length === 1 ? org.sucursalesActivas[0]!.id : '' })
+  Object.assign(f, g ? { fecha: g.fecha, categoria: g.categoria, descripcion: g.descripcion, proveedor: g.proveedor ?? '', monto: Number(g.monto), medio: g.medio, sucursal_id: g.sucursal_id ?? '', cuenta_id: g.cuenta_id ?? '' }
+    : { fecha: hoyISO(org.zona), categoria: 'otro', descripcion: '', proveedor: '', monto: null, medio: 'efectivo', sucursal_id: org.sucursalesActivas.length === 1 ? org.sucursalesActivas[0]!.id : '', cuenta_id: '' })
   errorForm.value = ''
   abierto.value = true
 }
 async function guardar() {
   if (!f.fecha || f.descripcion.trim().length < 2 || !f.monto || f.monto <= 0) { errorForm.value = 'Completá fecha, descripción y un monto mayor a 0.'; return }
-  const datos = { fecha: f.fecha, categoria: f.categoria, descripcion: f.descripcion.trim(), proveedor: f.proveedor.trim() || null, monto: f.monto, medio: f.medio, sucursal_id: f.sucursal_id || null }
+  const datos = { fecha: f.fecha, categoria: f.categoria, descripcion: f.descripcion.trim(), proveedor: f.proveedor.trim() || null, monto: f.monto, medio: f.medio, sucursal_id: f.sucursal_id || null, cuenta_id: f.cuenta_id || null }
   try {
     if (editando.value) await api.put(rutaOrg(org.id, `gastos/${editando.value.id}`), datos)
     else await api.post(rutaOrg(org.id, 'gastos'), datos)
@@ -113,6 +114,7 @@ async function borrar(g: Fila<'gastos'>) {
         <Campo etiqueta="Fecha" para="g-fecha" requerido><CampoFecha id="g-fecha" v-model="f.fecha" /></Campo>
         <Campo etiqueta="Categoría" para="g-cat"><select id="g-cat" v-model="f.categoria" class="entrada"><option v-for="(c, k) in CATEGORIAS_GASTO" :key="k" :value="k">{{ c }}</option></select></Campo>
         <Campo etiqueta="Medio de pago" para="g-medio"><select id="g-medio" v-model="f.medio" class="entrada"><option v-for="(m, k) in MEDIOS_PAGO" :key="k" :value="k">{{ m }}</option></select></Campo>
+        <Campo etiqueta="Sale de la cuenta" para="g-cuenta"><SelectorCuenta id="g-cuenta" v-model="f.cuenta_id" :medio="f.medio" /></Campo>
         <Campo etiqueta="Proveedor" para="g-prov"><input id="g-prov" v-model="f.proveedor" class="entrada" /></Campo>
         <Campo v-if="org.sucursalesActivas.length > 1" etiqueta="Sede" para="g-suc">
           <select id="g-suc" v-model="f.sucursal_id" class="entrada"><option value="">General</option><option v-for="s in org.sucursalesActivas" :key="s.id" :value="s.id">{{ s.nombre }}</option></select>

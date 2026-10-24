@@ -38,7 +38,7 @@ const navegacionInferior = computed(() => navegacion.value.filter((n) => n.a !==
 
 function activo(a: string) {
   if (a === '/presupuestos') return route.path.startsWith('/presupuestos') || route.path.startsWith('/catalogo')
-  if (a === '/cobros' || a === '/gastos') return ['/cobros', '/gastos', '/garantias'].some((x) => route.path.startsWith(x))
+  if (a === '/cobros' || a === '/gastos') return ['/cobros', '/gastos', '/garantias', '/caja', '/proveedores', '/rentabilidad'].some((x) => route.path.startsWith(x))
   return a === '/' ? route.path === '/' : route.path.startsWith(a)
 }
 watch(() => route.fullPath, () => { menuMovil.value = false })

@@ -19,6 +19,7 @@ const rutas: RouteRecordRaw[] = [
   { path: '/registro', component: () => import('@/views/auth/Registro.vue'), meta: { publica: true, titulo: 'Crear cuenta' } },
   { path: '/recuperar', component: () => import('@/views/auth/RecuperarClave.vue'), meta: { publica: true, titulo: 'Recuperar contraseña' } },
   { path: '/nueva-clave', component: () => import('@/views/auth/NuevaClave.vue'), meta: { libre: true, titulo: 'Nueva contraseña' } },
+  { path: '/s/:slug', name: 'pagina-salon', component: () => import('@/views/publico/PaginaSalon.vue'), meta: { libre: true, titulo: 'Pedí tu fecha' } },
   { path: '/invitacion/:token', component: () => import('@/views/auth/Invitacion.vue'), meta: { libre: true, titulo: 'Invitación' } },
   { path: '/bienvenida', component: () => import('@/views/onboarding/Bienvenida.vue'), meta: { sinOrganizacion: true, titulo: 'Bienvenida' } },
   {
@@ -39,6 +40,9 @@ const rutas: RouteRecordRaw[] = [
       { path: 'cobros', name: 'cobros', component: () => import('@/views/finanzas/Cobros.vue'), meta: { permiso: 'pagos.ver', titulo: 'Cobros' } },
       { path: 'garantias', name: 'garantias', component: () => import('@/views/finanzas/Garantias.vue'), meta: { permiso: 'pagos.ver', titulo: 'Garantías' } },
       { path: 'gastos', name: 'gastos', component: () => import('@/views/finanzas/Gastos.vue'), meta: { permiso: 'gastos.ver', titulo: 'Gastos' } },
+      { path: 'caja', name: 'caja', component: () => import('@/views/finanzas/Caja.vue'), meta: { permiso: 'caja.ver', titulo: 'Caja' } },
+      { path: 'proveedores', name: 'proveedores', component: () => import('@/views/finanzas/Proveedores.vue'), meta: { permiso: 'gastos.ver', titulo: 'Proveedores' } },
+      { path: 'rentabilidad', name: 'rentabilidad', component: () => import('@/views/finanzas/Rentabilidad.vue'), meta: { permiso: 'gastos.ver', titulo: 'Rentabilidad' } },
       {
         path: 'configuracion',
         component: () => import('@/views/configuracion/Configuracion.vue'),
@@ -46,6 +50,7 @@ const rutas: RouteRecordRaw[] = [
           { path: '', redirect: { name: 'config-organizacion' } },
           { path: 'organizacion', name: 'config-organizacion', component: () => import('@/views/configuracion/Organizacion.vue'), meta: { titulo: 'Organización' } },
           { path: 'sedes', name: 'config-sedes', component: () => import('@/views/configuracion/Sedes.vue'), meta: { titulo: 'Sedes y espacios' } },
+          { path: 'pagina', name: 'config-pagina', component: () => import('@/views/configuracion/PaginaPublica.vue'), meta: { titulo: 'Página web' } },
           { path: 'feriados', name: 'config-feriados', component: () => import('@/views/configuracion/Feriados.vue'), meta: { titulo: 'Feriados' } },
           { path: 'usuarios', name: 'config-usuarios', component: () => import('@/views/configuracion/Usuarios.vue'), meta: { permiso: 'usuarios.gestionar', titulo: 'Usuarios' } },
           { path: 'roles', name: 'config-roles', component: () => import('@/views/configuracion/Roles.vue'), meta: { titulo: 'Roles y permisos' } },

@@ -25,6 +25,9 @@ El front usa `supabase-js` **solo para la autenticación**; todos los datos pasa
 - **Servicios contratados**: el evento guarda lo que se vendió; los **adicionales** pedidos después suman al total y pueden generar su propia cuota.
 - **Depósitos de garantía**: se piden, se cobran y se devuelven (completos o con retención por daños y su motivo), con recibo y constancia en PDF. No cuentan como ingresos ni como pago del evento.
 - **Comprobantes de pago** numerados para cada seña, cuota o saldo, con el monto en letras y el saldo pendiente.
+- **Caja por cuenta**: efectivo, banco, Mercado Pago y las que agregues, con saldo inicial; cada cobro, gasto y garantía va a una cuenta (la elegida o la del medio de pago); transferencias entre cuentas; movimientos y saldos en PDF.
+- **Proveedores y rentabilidad**: costos por evento (con proveedor, o desde el costo del catálogo), pagos parciales que se registran como gasto, cuánto falta pagar a cada proveedor y la ganancia y el margen de cada evento y del período.
+- **Página web del salón** (`/s/<dirección>`): presentación, espacios, calendario de días libres y «Pedí tu fecha». El pedido entra como consulta (no bloquea la fecha), avisa al equipo y ofrece seguir por WhatsApp.
 - **Notificaciones** en la campana (web y app) y push en Android (ver [docs/APP_ANDROID.md](docs/APP_ANDROID.md)).
 
 ## App Android
